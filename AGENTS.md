@@ -37,6 +37,27 @@ npm run dist
 
 `dist:dir` 构建 x64 unpacked 应用并复制完整 Electron runtime 到 `dist/`。`dist` 构建 x64 unpacked 应用和 NSIS 安装包 `ChatHub-Setup-x64.exe`。台式机上需要重新验证。
 
+## GitHub Release 发布规则
+
+强制总结规则：每次 Release = 新版本创建，不允许覆盖任何旧版本。
+
+每次发布 GitHub Release 时必须遵守：
+
+- 不允许覆盖已有 Release。
+- 必须创建全新的 Release。
+- 每次发布必须生成新的 version tag，版本号顺延，除非用户特别说明版本号。
+- Release Notes 必须使用强制双语格式，包含：
+  - 中文说明。
+  - English Description。
+- 发布流程必须保证：
+  - 自动生成新版本 tag。
+  - 自动生成 Release 页面。
+  - 自动生成 changelog（如项目存在 changelog 生成流程）。
+  - 不影响旧版本可用性。
+  - 历史版本必须可回溯。
+
+该规则用于确保 Release 历史可追溯、每个版本独立存在、不可覆盖历史版本、支持中英双语发布说明，并保持发布流程安全稳定。
+
 ## 验收标准
 
 - 应用能启动，主窗口不闪退。

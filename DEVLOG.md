@@ -162,3 +162,16 @@
 - 后续找到本机 GitHub CLI：`C:\Program Files\GitHub CLI\gh.exe`。
 - 先前覆盖过 `v0.4.3` 的 Release 资产；已从 Git 历史恢复原 `v0.4.3` 安装包和原 Release 说明。
 - 新功能发布改为新版本 `v0.4.4`，并重新生成 `releases\ChatHub-Setup-x64.exe`。
+
+## 2026-06-26 Release 发布规则文档化
+
+### 本轮已经完成
+
+- 在 `AGENTS.md` 新增 GitHub Release 发布规则。
+- 明确每次 Release 必须创建新版本 tag 和全新 Release，禁止覆盖旧版本。
+- 明确 Release Notes 必须包含中文说明和 English Description。
+- 在 `TODO.md` 同步发布流程提醒。
+
+### 验证结果
+
+- 本轮只修改文档，不涉及业务代码或打包产物。

@@ -99,7 +99,7 @@ npm run dist
 - 修复 `src/main.js` 中托盘菜单和关闭确认弹窗中文乱码。
 - 继续保持 UI → Controller → Manager 的调用方向。
 - 可考虑给 Controller / Manager 增加轻量单元测试，但不要为了测试重写结构。
-- 梳理 GitHub Release 流程：使用 `gh release create` 或 `gh release upload` 上传安装包。
+- 梳理 GitHub Release 流程：每次发布必须创建新版本 tag 和新 Release，禁止覆盖旧 Release；Release Notes 必须包含中文说明和 English Description。
 
 ## 禁止重复做的事情
 
