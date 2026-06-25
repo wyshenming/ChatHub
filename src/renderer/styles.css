@@ -106,7 +106,8 @@ button {
 
 .service-button,
 .utility-button,
-.icon-button {
+.icon-button,
+.quick-action-button {
   min-height: 40px;
   border: 1px solid transparent;
   border-radius: 8px;
@@ -161,7 +162,8 @@ button {
 
 .service-button:hover,
 .utility-button:hover,
-.icon-button:hover {
+.icon-button:hover,
+.quick-action-button:hover {
   background: var(--panel-strong);
 }
 
@@ -241,6 +243,13 @@ button {
   line-height: 1.2;
 }
 
+.topbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .status {
   min-width: 84px;
   padding: 7px 10px;
@@ -263,6 +272,25 @@ button {
   border-color: #ffc7c7;
   background: #fff0f0;
   color: #b42318;
+}
+
+.quick-action-button {
+  min-height: 30px;
+  padding: 0 10px;
+  border-color: var(--border);
+  background: #ffffff;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.quick-action-button.danger {
+  border-color: #ffd4d4;
+  color: var(--danger);
+}
+
+.quick-action-button.danger:hover {
+  background: var(--danger-bg);
 }
 
 .webview-frame {

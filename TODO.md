@@ -68,6 +68,8 @@ npm start
 npm run dist:dir
 ```
 
+当前 E 盘环境已完成：`dist\ChatHub.exe` 已生成并可启动，PE 头确认为 x64。
+
 2. 验证：
 
 - `dist\ChatHub.exe` 可直接运行。
@@ -80,6 +82,8 @@ npm run dist:dir
 npm run dist
 ```
 
+当前 E 盘环境已完成：新的 `releases\ChatHub-Setup-x64.exe` 已由 `dist\ChatHub-Setup-x64.exe` 覆盖更新。
+
 4. 验证：
 
 - 生成 `dist\ChatHub-Setup-x64.exe`。
@@ -90,6 +94,8 @@ npm run dist
 
 ## 后续重构任务
 
+- 已完成：在主进程加入 `app.requestSingleInstanceLock()`，防止重复打开时创建第二个窗口 / 应用实例。
+- 已完成：将“刷新当前页”和“删除自定义网页”移动到顶部状态区，便于当前网页直接操作。
 - 修复 `src/main.js` 中托盘菜单和关闭确认弹窗中文乱码。
 - 继续保持 UI → Controller → Manager 的调用方向。
 - 可考虑给 Controller / Manager 增加轻量单元测试，但不要为了测试重写结构。

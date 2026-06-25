@@ -6,6 +6,8 @@ app.setName("ChatHub");
 app.setAppUserModelId("local.chathub");
 app.setPath("userData", path.join(app.getPath("appData"), "AI Chat Hub"));
 
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+
 const defaultCloseSettings = {
   closeBehavior: "tray",
   rememberChoice: true
@@ -85,11 +87,22 @@ function showMainWindow() {
     return;
   }
 
+  focusMainWindow();
+}
+
+function focusMainWindow() {
+  if (!mainWindow) {
+    return;
+  }
+
   if (mainWindow.isMinimized()) {
     mainWindow.restore();
   }
 
   mainWindow.show();
+  if (typeof mainWindow.moveTop === "function") {
+    mainWindow.moveTop();
+  }
   mainWindow.focus();
 }
 
@@ -208,16 +221,24 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
-  createTray();
-  createWindow();
-
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    focusMainWindow();
   });
-});
+
+  app.whenReady().then(() => {
+    createTray();
+    createWindow();
+
+    app.on("activate", () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+  });
+}
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin" && isQuitting) {
