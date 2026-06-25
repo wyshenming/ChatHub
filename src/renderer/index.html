@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChatHub</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar" aria-label="AI &#26381;&#21153;">
+        <div class="brand">
+          <div class="brand-mark">CH</div>
+          <div>
+            <h1>ChatHub</h1>
+            <p>AI &#32593;&#39029;&#24037;&#20316;&#21488;</p>
+          </div>
+        </div>
+
+        <nav class="service-list" id="service-list" aria-label="&#20999;&#25442;&#20219;&#21153;"></nav>
+
+        <div class="sidebar-footer">
+          <button class="utility-button primary" type="button" id="open-settings">&#35774;&#32622;</button>
+        </div>
+      </aside>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <div class="current-label">&#24403;&#21069;&#20219;&#21153;</div>
+            <h2 id="current-title">ChatGPT</h2>
+          </div>
+          <div class="status" id="status">&#27491;&#22312;&#21152;&#36733;</div>
+        </header>
+
+        <section class="webview-frame" id="webview-frame" aria-label="&#32593;&#39029;&#35270;&#22270;"></section>
+      </section>
+    </main>
+
+    <div class="modal-backdrop" id="settings-modal" hidden>
+      <section class="modal settings-modal" aria-labelledby="settings-title">
+        <div class="modal-header">
+          <h3 id="settings-title">&#35774;&#32622;</h3>
+          <button class="icon-button" type="button" id="close-settings" aria-label="&#20851;&#38381;">x</button>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">&#20219;&#21153;</div>
+          <button class="utility-button" type="button" id="pause-current">&#25346;&#36215;&#24403;&#21069;&#20219;&#21153;</button>
+          <button class="utility-button" type="button" id="finish-current">&#26631;&#35760;&#23436;&#25104;</button>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">&#32593;&#39029;</div>
+          <button class="utility-button primary" type="button" id="add-site">&#28155;&#21152;&#32593;&#39029;</button>
+          <button class="utility-button" type="button" id="reload-current">&#21047;&#26032;&#24403;&#21069;&#39029;</button>
+          <button class="utility-button" type="button" id="open-current">&#27983;&#35272;&#22120;&#25171;&#24320;</button>
+          <button class="utility-button" type="button" id="remove-current" hidden>&#21024;&#38500;&#33258;&#23450;&#20041;&#32593;&#39029;</button>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">&#30331;&#24405;&#29366;&#24577;</div>
+          <button class="utility-button danger" type="button" id="clear-current">&#28165;&#29702;&#24403;&#21069;&#30331;&#24405;</button>
+          <button class="utility-button danger" type="button" id="clear-all">&#28165;&#29702;&#20840;&#37096;&#30331;&#24405;</button>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">&#20851;&#38381;&#31383;&#21475;&#34892;&#20026;</div>
+          <label class="choice-row">
+            <input type="radio" name="close-behavior" value="ask" />
+            <span>&#27599;&#27425;&#35810;&#38382;</span>
+          </label>
+          <label class="choice-row">
+            <input type="radio" name="close-behavior" value="quit" />
+            <span>&#30452;&#25509;&#36864;&#20986;&#24212;&#29992;</span>
+          </label>
+          <label class="choice-row">
+            <input type="radio" name="close-behavior" value="tray" />
+            <span>&#26368;&#23567;&#21270;&#21040;&#31995;&#32479;&#25176;&#30424;&#65288;&#25512;&#33616;&#65289;</span>
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="add-site-modal" hidden>
+      <form class="modal" id="add-site-form">
+        <div class="modal-header">
+          <h3>&#28155;&#21152;&#33258;&#23450;&#20041;&#32593;&#39029;</h3>
+          <button class="icon-button" type="button" id="close-add-site" aria-label="&#20851;&#38381;">x</button>
+        </div>
+
+        <label class="field">
+          <span>&#21517;&#31216;</span>
+          <input id="site-name" name="name" maxlength="28" autocomplete="off" placeholder="Grok" required />
+        </label>
+
+        <label class="field">
+          <span>&#32593;&#22336;</span>
+          <input id="site-url" name="url" type="url" autocomplete="off" placeholder="https://grok.com/" required />
+        </label>
+
+        <p class="form-error" id="form-error" role="alert"></p>
+
+        <div class="modal-actions">
+          <button class="utility-button" type="button" id="cancel-add-site">&#21462;&#28040;</button>
+          <button class="utility-button primary" type="submit">&#28155;&#21152;</button>
+        </div>
+      </form>
+    </div>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

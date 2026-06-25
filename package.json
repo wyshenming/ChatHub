@@ -1,0 +1,57 @@
+{
+  "name": "chathub",
+  "version": "0.4.3",
+  "description": "ChatHub",
+  "productName": "ChatHub",
+  "author": "ChatHub",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64 --dir && node scripts/set-exe-metadata.js --unpacked-only && node scripts/copy-x64-app-exe.js && electron-builder --win nsis --x64 --prepackaged dist/win-unpacked",
+    "dist:dir": "electron-builder --win --x64 --dir && node scripts/set-exe-metadata.js --unpacked-only && node scripts/copy-x64-app-exe.js"
+  },
+  "build": {
+    "appId": "local.chathub",
+    "productName": "ChatHub",
+    "extraMetadata": {
+      "name": "chathub",
+      "productName": "ChatHub",
+      "description": "ChatHub",
+      "author": "ChatHub"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "artifactName": "${productName}-Setup-${arch}.${ext}",
+    "files": [
+      "build/icon.ico",
+      "build/icon.png",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "executableName": "ChatHub",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
+    "png-to-ico": "^3.0.1",
+    "rcedit": "^5.0.2"
+  }
+}
