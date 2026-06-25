@@ -5,6 +5,7 @@ const { rcedit } = require("rcedit");
 const root = path.join(__dirname, "..");
 const unpackedTarget = path.join(root, "dist", "win-unpacked", "ChatHub.exe");
 const portableTarget = path.join(root, "dist", "ChatHub.exe");
+const iconPath = path.join(root, "build", "icon.ico");
 const targets = process.argv.includes("--unpacked-only")
   ? [unpackedTarget]
   : [portableTarget, unpackedTarget];
@@ -17,6 +18,7 @@ async function updateTarget(target) {
   }
 
   await rcedit(target, {
+    icon: iconPath,
     "file-version": version,
     "product-version": version,
     "version-string": {
