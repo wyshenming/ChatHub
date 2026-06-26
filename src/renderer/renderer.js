@@ -1,4 +1,5 @@
 import { AppController } from "./controller.js";
+import { APP_AUTHOR, APP_REPOSITORY_URL } from "./constants.js";
 import { StorageManager } from "./storage-manager.js";
 import { TaskManager } from "./task-manager.js";
 import { WebViewManager } from "./webview-manager.js";
@@ -11,15 +12,20 @@ const status = document.querySelector("#status");
 const reloadButton = document.querySelector("#reload-current");
 const openButton = document.querySelector("#open-current");
 const addSiteButton = document.querySelector("#add-site");
-const pauseCurrentButton = document.querySelector("#pause-current");
-const finishCurrentButton = document.querySelector("#finish-current");
 const clearCurrentButton = document.querySelector("#clear-current");
 const clearAllButton = document.querySelector("#clear-all");
 const removeCurrentButton = document.querySelector("#remove-current");
 const openSettingsButton = document.querySelector("#open-settings");
 const settingsModal = document.querySelector("#settings-modal");
 const closeSettingsButton = document.querySelector("#close-settings");
+const openAboutButton = document.querySelector("#open-about");
 const closeBehaviorInputs = [...document.querySelectorAll("input[name='close-behavior']")];
+const aboutModal = document.querySelector("#about-modal");
+const closeAboutButton = document.querySelector("#close-about");
+const openRepositoryButton = document.querySelector("#open-repository");
+const aboutVersion = document.querySelector("#about-version");
+const aboutAuthor = document.querySelector("#about-author");
+const aboutRepository = document.querySelector("#about-repository");
 const addSiteModal = document.querySelector("#add-site-modal");
 const addSiteForm = document.querySelector("#add-site-form");
 const closeAddSiteButton = document.querySelector("#close-add-site");
@@ -76,7 +82,7 @@ const view = {
 
   closeAddSiteModal() {
     addSiteModal.hidden = true;
-    if (settingsModal.hidden) {
+    if (settingsModal.hidden && aboutModal.hidden) {
       document.body.classList.remove("modal-open");
     }
   },
@@ -88,7 +94,22 @@ const view = {
 
   closeSettingsModal() {
     settingsModal.hidden = true;
-    if (addSiteModal.hidden) {
+    if (addSiteModal.hidden && aboutModal.hidden) {
+      document.body.classList.remove("modal-open");
+    }
+  },
+
+  openAboutModal({ version, author, repositoryUrl }) {
+    aboutVersion.textContent = version;
+    aboutAuthor.textContent = author;
+    aboutRepository.textContent = repositoryUrl;
+    document.body.classList.add("modal-open");
+    aboutModal.hidden = false;
+  },
+
+  closeAboutModal() {
+    aboutModal.hidden = true;
+    if (settingsModal.hidden && addSiteModal.hidden) {
       document.body.classList.remove("modal-open");
     }
   },
@@ -128,18 +149,15 @@ controller = new AppController({
   webViewManager,
   storageManager,
   view,
+  aboutInfo: {
+    version: window.aiChatHub?.version || "unknown",
+    author: APP_AUTHOR,
+    repositoryUrl: APP_REPOSITORY_URL,
+  },
 });
 
 reloadButton.addEventListener("click", () => {
   controller.reloadCurrent();
-});
-
-pauseCurrentButton.addEventListener("click", () => {
-  controller.pauseCurrent();
-});
-
-finishCurrentButton.addEventListener("click", () => {
-  controller.finishCurrent();
 });
 
 openButton.addEventListener("click", () => {
@@ -154,9 +172,27 @@ closeSettingsButton.addEventListener("click", () => {
   controller.closeSettings();
 });
 
+openAboutButton.addEventListener("click", () => {
+  controller.openAbout();
+});
+
+closeAboutButton.addEventListener("click", () => {
+  controller.closeAbout();
+});
+
+openRepositoryButton.addEventListener("click", () => {
+  controller.openRepository();
+});
+
 settingsModal.addEventListener("click", (event) => {
   if (event.target === settingsModal) {
     controller.closeSettings();
+  }
+});
+
+aboutModal.addEventListener("click", (event) => {
+  if (event.target === aboutModal) {
+    controller.closeAbout();
   }
 });
 

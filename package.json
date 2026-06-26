@@ -1,9 +1,9 @@
 {
   "name": "chathub",
-  "version": "0.4.4",
+  "version": "0.4.5",
   "description": "ChatHub",
   "productName": "ChatHub",
-  "author": "ChatHub",
+  "author": "染泓如梦QAQ",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -17,7 +17,7 @@
       "name": "chathub",
       "productName": "ChatHub",
       "description": "ChatHub",
-      "author": "ChatHub"
+      "author": "染泓如梦QAQ"
     },
     "directories": {
       "output": "dist"

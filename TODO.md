@@ -96,6 +96,9 @@ npm run dist
 
 - 已完成：在主进程加入 `app.requestSingleInstanceLock()`，防止重复打开时创建第二个窗口 / 应用实例。
 - 已完成：将“刷新当前页”和“删除自定义网页”移动到顶部状态区，便于当前网页直接操作。
+- 已完成：在设置中新增“关于 ChatHub”弹窗，并为 exe 版本资源写入作者信息。
+- 已完成：从设置弹窗移除“挂起当前任务”和“标记完成”，保留切换任务自动挂起机制。
+- 已完成：顺延版本到 `v0.4.5`，完成完整 `npm run dist` 打包并更新 `releases\ChatHub-Setup-x64.exe`。
 - 修复 `src/main.js` 中托盘菜单和关闭确认弹窗中文乱码。
 - 继续保持 UI → Controller → Manager 的调用方向。
 - 可考虑给 Controller / Manager 增加轻量单元测试，但不要为了测试重写结构。

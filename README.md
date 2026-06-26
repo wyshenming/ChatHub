@@ -1,4 +1,4 @@
-# ChatHub
+﻿# ChatHub
 
 ## 中文
 
@@ -14,6 +14,8 @@ ChatHub 是一个面向 Windows 的 AI 网页工作台。它基于 Electron + We
 - 支持按当前网页或全部网页清理登录状态。
 - 支持系统托盘和关闭窗口行为设置。
 - 顶部提供当前网页的快捷刷新按钮；自定义网页还会显示快捷删除按钮。
+- 设置中提供关于窗口，展示版本、作者和 GitHub 仓库信息。
+- 可执行文件元数据写入作者信息：染泓如梦QAQ。
 - 支持单实例运行：重复打开 exe 时会激活已有窗口，不会创建第二个应用窗口。
 - 面向 Windows x64 打包。
 
@@ -87,6 +89,8 @@ ChatHub is a Windows desktop workspace for AI chat websites. It uses Electron + 
 - Clear login state for the current page or all pages.
 - Configurable close behavior with system tray support.
 - Quick refresh button in the top bar; custom pages also show a quick delete button.
+- About dialog in settings with version, author, and GitHub repository information.
+- Executable metadata includes the author: 染泓如梦QAQ.
 - Single-instance behavior: opening the exe again activates the existing window instead of creating a second app window.
 - Windows x64 build target.
 

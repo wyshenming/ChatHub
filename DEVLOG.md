@@ -175,3 +175,85 @@
 ### 验证结果
 
 - 本轮只修改文档，不涉及业务代码或打包产物。
+
+## 2026-06-26 关于弹窗与作者元数据
+
+### 本轮已经完成
+
+- 在设置弹窗中新增“关于 ChatHub”按钮。
+- 新增独立关于弹窗，展示版本号、作者和 GitHub 仓库地址。
+- GitHub 仓库跳转继续走 Controller → UI openUrl，不绕过现有分层。
+- 将 `package.json` 作者改为 `染泓如梦QAQ`。
+- 更新 `scripts\set-exe-metadata.js`，写入 exe 版本资源中的 `CompanyName`、`Author`、`Authors` 和版权字段。
+
+### 已经修改的文件
+
+- `package.json`
+- `scripts/set-exe-metadata.js`
+- `src/renderer/constants.js`
+- `src/renderer/index.html`
+- `src/renderer/renderer.js`
+- `src/renderer/controller.js`
+- `src/renderer/styles.css`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check` 已通过：renderer 模块、`src/main.js`、`src/preload.js`、打包脚本。
+- `npm audit --omit=dev` 通过，未发现漏洞。
+- `npm run dist:dir` 成功完成。
+- `dist\ChatHub.exe` 与 `dist\win-unpacked\ChatHub.exe` 均确认为 x64。
+- 已短暂启动 `dist\ChatHub.exe`，主窗口进程正常出现，随后手动停止。
+- exe 版本资源中已确认 `CompanyName` 和版权字段显示 `染泓如梦QAQ`；Windows 详情页是否展示自定义 `Author` / `Authors` 字段仍需人工查看属性窗口确认。
+
+## 2026-06-26 移除手动挂起 / 标记完成入口
+
+### 本轮已经完成
+
+- 从设置弹窗中移除“挂起当前任务”和“标记完成”两个按钮。
+- 删除 renderer 中对应 DOM 查询和事件绑定。
+- 删除 Controller 中对应的手动 `pauseCurrent` / `finishCurrent` 方法。
+- 保留 TaskManager 的状态字段和切换任务时保存快照 / 自动挂起逻辑，不改变 WebView 生命周期。
+
+### 已经修改的文件
+
+- `src/renderer/index.html`
+- `src/renderer/renderer.js`
+- `src/renderer/controller.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check` 已通过：renderer 模块、`src/main.js`、`src/preload.js`、打包脚本。
+- `rg` 未发现 `pause-current`、`finish-current`、`pauseCurrent`、`finishCurrent` 残留引用。
+- `npm audit --omit=dev` 通过，未发现漏洞。
+- `npm run dist:dir` 成功完成。
+- 已短暂启动 `dist\ChatHub.exe`，主窗口进程正常出现，随后手动停止。
+
+## 2026-06-26 v0.4.5 打包与发布准备
+
+### 本轮已经完成
+
+- 按 Release 规则将版本从 `0.4.4` 顺延到 `0.4.5`。
+- 同步更新 `package.json`、`package-lock.json`、`src/preload.js`、`README.md`、`releases/README.md` 的版本 / 说明。
+- 运行完整 `npm run dist`，生成新的 NSIS x64 安装包。
+- 将 `dist\ChatHub-Setup-x64.exe` 复制覆盖到 `releases\ChatHub-Setup-x64.exe`，用于提交仓库和上传新版 Release。
+
+### 验证结果
+
+- `node --check` 已通过：renderer 模块、`src/main.js`、`src/preload.js`、打包脚本。
+- `npm audit --omit=dev` 通过，未发现漏洞。
+- `rg` 未发现手动挂起 / 标记完成入口残留引用。
+- `npm run dist` 成功完成。
+- `dist\ChatHub.exe` 为 x64，版本资源显示 `ProductVersion=0.4.5`、`CompanyName=染泓如梦QAQ`。
+- `releases\ChatHub-Setup-x64.exe` 已更新，大小约 76.2 MB。
+- 已短暂启动 `dist\ChatHub.exe`，主窗口进程正常出现，随后手动停止。
+
+### 发布说明
+
+- 本轮应创建全新 GitHub Release：`v0.4.5`。
+- 不允许覆盖 `v0.4.4` 或更早版本。

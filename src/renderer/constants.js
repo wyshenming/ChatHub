@@ -1,6 +1,9 @@
 export const TASKS_STORAGE_KEY = "chathub.tasks.v1";
 export const LEGACY_CUSTOM_SERVICES_KEY = "chathub.customServices.v1";
 export const RUNTIME_PARTITION = "persist:chathub-runtime";
+export const APP_NAME = "ChatHub";
+export const APP_AUTHOR = "染泓如梦QAQ";
+export const APP_REPOSITORY_URL = "https://github.com/wyshenming/ChatHub";
 
 export const TaskStatus = {
   RUNNING: "running",

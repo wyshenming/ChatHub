@@ -11,6 +11,7 @@ const targets = process.argv.includes("--unpacked-only")
   : [portableTarget, unpackedTarget];
 
 const version = require(path.join(root, "package.json")).version;
+const author = "染泓如梦QAQ";
 
 async function updateTarget(target) {
   if (!fs.existsSync(target)) {
@@ -22,12 +23,14 @@ async function updateTarget(target) {
     "file-version": version,
     "product-version": version,
     "version-string": {
-      CompanyName: "ChatHub",
+      CompanyName: author,
       FileDescription: "ChatHub",
       InternalName: "ChatHub",
       OriginalFilename: "ChatHub.exe",
       ProductName: "ChatHub",
-      LegalCopyright: "Copyright (c) 2026 ChatHub"
+      Author: author,
+      Authors: author,
+      LegalCopyright: `Copyright (c) 2026 ${author}`
     }
   });
 }

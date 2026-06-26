@@ -1,8 +1,8 @@
-# ChatHub Releases / ChatHub 发布说明
+﻿# ChatHub Releases / ChatHub 发布说明
 
 ## 中文
 
-当前版本：v0.4.4
+当前版本：v0.4.5
 
 当前安装包：
 
@@ -21,6 +21,9 @@ ChatHub-Setup-x64.exe
 - 支持添加自定义 AI 网页。
 - 顶部快捷刷新当前网页。
 - 自定义网页支持顶部快捷删除。
+- 设置中新增关于窗口，展示版本、作者和 GitHub 仓库信息。
+- 可执行文件元数据写入作者：染泓如梦QAQ。
+- 设置中移除了手动“挂起当前任务”和“标记完成”，切换任务时仍会自动保存当前状态。
 - 单实例运行机制：重复打开程序时会激活已有窗口，不会创建第二个应用窗口。
 - 本机保存网页登录状态，安装包不包含个人账号信息。
 
@@ -32,7 +35,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.4.4
+Current version: v0.4.5
 
 Current installer:
 
@@ -51,6 +54,9 @@ ChatHub-Setup-x64.exe
 - Custom AI web page support.
 - Quick refresh for the current page in the top bar.
 - Quick delete for custom pages in the top bar.
+- About dialog in settings with version, author, and GitHub repository information.
+- Executable metadata includes the author: 染泓如梦QAQ.
+- Manual pause/finish actions were removed from settings; switching tasks still saves the current state automatically.
 - Single-instance behavior: launching the app again activates the existing window instead of creating a second app window.
 - Website login state is stored locally. The installer does not include personal account data.
 

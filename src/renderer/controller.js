@@ -3,11 +3,12 @@ import { createCustomTask } from "./task-manager.js";
 import { normalizeUrl, originFromUrl } from "./utils.js";
 
 export class AppController {
-  constructor({ taskManager, webViewManager, storageManager, view }) {
+  constructor({ taskManager, webViewManager, storageManager, view, aboutInfo }) {
     this.taskManager = taskManager;
     this.webViewManager = webViewManager;
     this.storageManager = storageManager;
     this.view = view;
+    this.aboutInfo = aboutInfo;
   }
 
   start() {
@@ -81,32 +82,6 @@ export class AppController {
     this.view.closeSettingsModal();
   }
 
-  async pauseCurrent() {
-    const task = this.taskManager.active();
-    if (!task) {
-      return;
-    }
-
-    await this.persistCurrentTaskAsPaused();
-    this.taskManager.mark(task.id, TaskStatus.PAUSED);
-    this.emitTasks();
-    this.view.setStatus(text.paused, "ready");
-    this.view.closeSettingsModal();
-  }
-
-  async finishCurrent() {
-    const task = this.taskManager.active();
-    if (!task) {
-      return;
-    }
-
-    await this.persistCurrentTaskAsPaused();
-    this.taskManager.mark(task.id, TaskStatus.FINISHED);
-    this.emitTasks();
-    this.view.setStatus(text.finished, "ready");
-    this.view.closeSettingsModal();
-  }
-
   openCurrentInBrowser() {
     const active = this.taskManager.active();
     const targetUrl = this.webViewManager.safeGetUrl() || active?.url;
@@ -124,6 +99,19 @@ export class AppController {
 
   closeSettings() {
     this.view.closeSettingsModal();
+  }
+
+  openAbout() {
+    this.view.closeSettingsModal();
+    this.view.openAboutModal(this.aboutInfo);
+  }
+
+  closeAbout() {
+    this.view.closeAboutModal();
+  }
+
+  openRepository() {
+    this.view.openUrl(this.aboutInfo.repositoryUrl);
   }
 
   async loadCloseSettings() {

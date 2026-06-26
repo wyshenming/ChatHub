@@ -49,12 +49,6 @@
         </div>
 
         <div class="settings-group">
-          <div class="settings-label">&#20219;&#21153;</div>
-          <button class="utility-button" type="button" id="pause-current">&#25346;&#36215;&#24403;&#21069;&#20219;&#21153;</button>
-          <button class="utility-button" type="button" id="finish-current">&#26631;&#35760;&#23436;&#25104;</button>
-        </div>
-
-        <div class="settings-group">
           <div class="settings-label">&#32593;&#39029;</div>
           <button class="utility-button primary" type="button" id="add-site">&#28155;&#21152;&#32593;&#39029;</button>
           <button class="utility-button" type="button" id="open-current">&#27983;&#35272;&#22120;&#25171;&#24320;</button>
@@ -80,6 +74,47 @@
             <input type="radio" name="close-behavior" value="tray" />
             <span>&#26368;&#23567;&#21270;&#21040;&#31995;&#32479;&#25176;&#30424;&#65288;&#25512;&#33616;&#65289;</span>
           </label>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-label">&#20851;&#20110;</div>
+          <button class="utility-button" type="button" id="open-about">&#20851;&#20110; ChatHub</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="about-modal" hidden>
+      <section class="modal about-modal" aria-labelledby="about-title">
+        <div class="modal-header">
+          <h3 id="about-title">&#20851;&#20110; ChatHub</h3>
+          <button class="icon-button" type="button" id="close-about" aria-label="&#20851;&#38381;">x</button>
+        </div>
+
+        <div class="about-brand">
+          <div class="brand-mark">CH</div>
+          <div>
+            <strong>ChatHub</strong>
+            <span>AI &#32593;&#39029;&#24037;&#20316;&#21488;</span>
+          </div>
+        </div>
+
+        <dl class="about-list">
+          <div>
+            <dt>&#29256;&#26412;</dt>
+            <dd id="about-version">-</dd>
+          </div>
+          <div>
+            <dt>&#20316;&#32773;</dt>
+            <dd id="about-author">-</dd>
+          </div>
+          <div>
+            <dt>GitHub</dt>
+            <dd id="about-repository">-</dd>
+          </div>
+        </dl>
+
+        <div class="modal-actions single">
+          <button class="utility-button primary" type="button" id="open-repository">GitHub &#20179;&#24211;</button>
         </div>
       </section>
     </div>
