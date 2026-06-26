@@ -16,6 +16,14 @@ export class StorageManager {
     this.localStorage.setItem(key, JSON.stringify(value));
   }
 
+  readString(key) {
+    return this.localStorage.getItem(key);
+  }
+
+  writeString(key, value) {
+    this.localStorage.setItem(key, String(value));
+  }
+
   async getCloseSettings() {
     return this.systemApi.getCloseSettings();
   }
@@ -26,5 +34,9 @@ export class StorageManager {
 
   async clearServiceData(targets) {
     return this.systemApi.clearServiceData(targets);
+  }
+
+  async clearServiceCache(targets) {
+    return this.systemApi.clearServiceCache(targets);
   }
 }

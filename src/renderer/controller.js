@@ -43,6 +43,8 @@ export class AppController {
   emitTasks() {
     this.view.renderTasks({
       tasks: this.taskManager.all(),
+      groups: this.taskManager.grouped(),
+      availableGroups: this.taskManager.allGroups(),
       activeTaskId: this.taskManager.activeTaskId,
       activeTask: this.taskManager.active(),
     });
@@ -80,6 +82,35 @@ export class AppController {
   async reloadCurrent() {
     this.webViewManager.reload();
     this.view.closeSettingsModal();
+  }
+
+  async reloadTask(taskId) {
+    const task = this.taskManager.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    if (task.id !== this.taskManager.activeTaskId) {
+      await this.selectTask(task.id);
+    }
+
+    this.webViewManager.reload();
+  }
+
+  async clearTaskCache(taskId) {
+    const task = this.taskManager.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    if (task.id !== this.taskManager.activeTaskId) {
+      await this.selectTask(task.id);
+    }
+
+    this.view.setStatus(text.clearingCache);
+    await this.storageManager.clearServiceCache([{ partition: RUNTIME_PARTITION }]);
+    this.webViewManager.reload();
+    this.view.setStatus(text.cacheCleared, "ready");
   }
 
   openCurrentInBrowser() {
@@ -138,6 +169,173 @@ export class AppController {
 
   closeAddSite() {
     this.view.closeAddSiteModal();
+  }
+
+  createGroup(name) {
+    try {
+      const group = this.taskManager.addGroup(name);
+      this.emitTasks();
+      return group;
+    } catch (error) {
+      this.view.alert(error.message || text.addFailed);
+      return null;
+    }
+  }
+
+  toggleGroup(groupId) {
+    this.taskManager.toggleGroup(groupId);
+    this.emitTasks();
+  }
+
+  deleteGroup(groupId) {
+    const group = this.taskManager.allGroups().find((item) => item.id === groupId);
+    if (!group) {
+      return;
+    }
+
+    const confirmed = this.view.confirm(
+      `\u8981\u5220\u9664\u5206\u7ec4\u300c${group.name}\u300d\u5417\uff1f\u5176\u4e2d\u7684\u4efb\u52a1\u4f1a\u81ea\u52a8\u56de\u6536\u5230\u9ed8\u8ba4\u5206\u7ec4\u3002`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      this.taskManager.removeGroup(groupId);
+      this.emitTasks();
+    } catch (error) {
+      this.view.alert(error.message || text.addFailed);
+    }
+  }
+
+  async renameGroup(groupId) {
+    const group = this.taskManager.allGroups().find((item) => item.id === groupId);
+    if (!group) {
+      return;
+    }
+
+    const nextName = await this.view.prompt(
+      "\u8bf7\u8f93\u5165\u65b0\u5206\u7ec4\u540d\u79f0",
+      group.name
+    );
+    if (nextName === null) {
+      return;
+    }
+
+    try {
+      this.taskManager.renameGroup(groupId, nextName);
+      this.emitTasks();
+    } catch (error) {
+      this.view.alert(error.message || text.addFailed);
+    }
+  }
+
+  moveTaskToGroup(taskId, groupId) {
+    this.taskManager.setTaskGroup(taskId, groupId);
+    this.emitTasks();
+  }
+
+  async addTaskToNewGroup(taskId) {
+    const task = this.taskManager.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    const groupName = await this.view.prompt("\u8bf7\u8f93\u5165\u65b0\u5206\u7ec4\u540d\u79f0", "");
+    if (groupName === null) {
+      return;
+    }
+
+    const group = this.createGroup(groupName);
+    if (group) {
+      this.taskManager.setTaskGroup(taskId, group.id);
+      this.emitTasks();
+    }
+  }
+
+  moveGroup(sourceGroupId, targetGroupId) {
+    this.taskManager.reorderGroup(sourceGroupId, targetGroupId);
+    this.emitTasks();
+  }
+
+  moveCurrentTaskToGroup(groupId) {
+    const task = this.taskManager.active();
+    if (!task) {
+      return;
+    }
+
+    this.taskManager.setTaskGroup(task.id, groupId);
+    this.emitTasks();
+  }
+
+  hideCurrentTask() {
+    const task = this.taskManager.active();
+    if (!task) {
+      return;
+    }
+
+    this.taskManager.setTaskHidden(task.id, true);
+    this.emitTasks();
+    this.view.closeSettingsModal();
+  }
+
+  hideTask(taskId) {
+    this.taskManager.setTaskHidden(taskId, true);
+    this.emitTasks();
+  }
+
+  async renameTask(taskId) {
+    const task = this.taskManager.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    const nextTitle = await this.view.prompt(
+      "\u8bf7\u8f93\u5165\u65b0\u4efb\u52a1\u540d\u79f0",
+      task.title
+    );
+    if (nextTitle === null) {
+      return;
+    }
+
+    try {
+      this.taskManager.renameTask(taskId, nextTitle);
+      this.emitTasks();
+    } catch (error) {
+      this.view.alert(error.message || text.addFailed);
+    }
+  }
+
+  async deleteTask(taskId) {
+    const task = this.taskManager.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    const confirmed = this.view.confirm(
+      `\u8981\u5220\u9664\u4efb\u52a1\u300c${task.title}\u300d\u5417\uff1f\u8fd9\u4f1a\u5173\u95ed\u8be5\u4efb\u52a1\u5165\u53e3\uff0c\u4e0d\u4f1a\u6e05\u7406\u5176\u4ed6\u4efb\u52a1\u3002`
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    const wasActive = task.id === this.taskManager.activeTaskId;
+    this.taskManager.remove(task.id);
+    this.emitTasks();
+
+    if (wasActive) {
+      const nextTask = this.taskManager.active();
+      if (nextTask) {
+        this.webViewManager.loadTask(nextTask);
+      } else {
+        this.webViewManager.clear();
+      }
+    }
+  }
+
+  showAllTasks() {
+    this.taskManager.showAllTasks();
+    this.emitTasks();
   }
 
   async submitCustomSite({ name, url }) {

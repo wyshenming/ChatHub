@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v0.4.5
+当前版本：v0.5.0
 
 当前安装包：
 
@@ -35,7 +35,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.4.5
+Current version: v0.5.0
 
 Current installer:
 

@@ -74,6 +74,20 @@ ipcMain.handle("clear-service-data", async (_event, targets) => {
   return { cleared: normalizedTargets.length };
 });
 
+ipcMain.handle("clear-service-cache", async (_event, targets) => {
+  const normalizedTargets = (Array.isArray(targets) ? targets : [])
+    .map((target) => (typeof target === "string" ? { partition: target } : target))
+    .filter((target) => target && typeof target.partition === "string")
+    .filter((target) => target.partition.startsWith("persist:"));
+
+  for (const target of normalizedTargets) {
+    const targetSession = session.fromPartition(target.partition);
+    await targetSession.clearCache();
+  }
+
+  return { cleared: normalizedTargets.length };
+});
+
 ipcMain.handle("get-close-settings", () => closeSettings);
 
 ipcMain.handle("set-close-settings", (_event, settings) => {

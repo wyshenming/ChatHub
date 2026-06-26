@@ -176,6 +176,16 @@ export class WebViewManager {
     this.webview.reload();
   }
 
+  clear() {
+    this.currentTaskId = null;
+    this.webview.dataset.taskId = "";
+    try {
+      this.webview.loadURL("about:blank");
+    } catch {
+      // Clearing is best-effort when the task list is empty.
+    }
+  }
+
   safeGetUrl() {
     try {
       return this.webview.getURL() || "";

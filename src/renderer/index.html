@@ -33,7 +33,6 @@
           <div class="topbar-actions">
             <div class="status" id="status">&#27491;&#22312;&#21152;&#36733;</div>
             <button class="quick-action-button" type="button" id="reload-current" title="&#21047;&#26032;&#24403;&#21069;&#39029;" aria-label="&#21047;&#26032;&#24403;&#21069;&#39029;">&#21047;&#26032;</button>
-            <button class="quick-action-button danger" type="button" id="remove-current" title="&#21024;&#38500;&#33258;&#23450;&#20041;&#32593;&#39029;" aria-label="&#21024;&#38500;&#33258;&#23450;&#20041;&#32593;&#39029;" hidden>&#21024;&#38500;</button>
           </div>
         </header>
 
@@ -46,18 +45,6 @@
         <div class="modal-header">
           <h3 id="settings-title">&#35774;&#32622;</h3>
           <button class="icon-button" type="button" id="close-settings" aria-label="&#20851;&#38381;">x</button>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-label">&#32593;&#39029;</div>
-          <button class="utility-button primary" type="button" id="add-site">&#28155;&#21152;&#32593;&#39029;</button>
-          <button class="utility-button" type="button" id="open-current">&#27983;&#35272;&#22120;&#25171;&#24320;</button>
-        </div>
-
-        <div class="settings-group">
-          <div class="settings-label">&#30331;&#24405;&#29366;&#24577;</div>
-          <button class="utility-button danger" type="button" id="clear-current">&#28165;&#29702;&#24403;&#21069;&#30331;&#24405;</button>
-          <button class="utility-button danger" type="button" id="clear-all">&#28165;&#29702;&#20840;&#37096;&#30331;&#24405;</button>
         </div>
 
         <div class="settings-group">
@@ -141,6 +128,25 @@
         <div class="modal-actions">
           <button class="utility-button" type="button" id="cancel-add-site">&#21462;&#28040;</button>
           <button class="utility-button primary" type="submit">&#28155;&#21152;</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-backdrop" id="text-prompt-modal" hidden>
+      <form class="modal" id="text-prompt-form">
+        <div class="modal-header">
+          <h3 id="text-prompt-title">&#36755;&#20837;&#21517;&#31216;</h3>
+          <button class="icon-button" type="button" id="close-text-prompt" aria-label="&#20851;&#38381;">x</button>
+        </div>
+
+        <label class="field">
+          <span id="text-prompt-label">&#21517;&#31216;</span>
+          <input id="text-prompt-input" maxlength="32" autocomplete="off" required />
+        </label>
+
+        <div class="modal-actions">
+          <button class="utility-button" type="button" id="cancel-text-prompt">&#21462;&#28040;</button>
+          <button class="utility-button primary" type="submit">&#30830;&#23450;</button>
         </div>
       </form>
     </div>

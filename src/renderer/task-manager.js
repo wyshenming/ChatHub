@@ -1,8 +1,12 @@
 import {
+  APP_VERSION_STORAGE_KEY,
+  DEFAULT_GROUP_ID,
+  GROUPS_STORAGE_KEY,
   LEGACY_CUSTOM_SERVICES_KEY,
   TASKS_STORAGE_KEY,
   TaskStatus,
   defaultTaskSeeds,
+  text,
 } from "./constants.js";
 import { fallbackUrlForTask, isHttpUrl, now, originFromUrl } from "./utils.js";
 
@@ -11,19 +15,39 @@ export function createTask(seed) {
   const candidateUrl = seed.url || seed.lastUrl || seed.initialUrl;
   const fallbackUrl = fallbackUrlForTask(seed);
   const url = isHttpUrl(candidateUrl) ? candidateUrl : fallbackUrl;
+  const groupId = seed.groupId || seed.group || DEFAULT_GROUP_ID;
+  const hidden = false;
 
   return {
     id: seed.id,
     title: seed.title,
+    name: seed.name || seed.title,
+    deleted: Boolean(seed.deleted),
     url,
     initialUrl: seed.initialUrl || url,
     origin: seed.origin || originFromUrl(url),
     color: seed.color || "#172033",
     custom: Boolean(seed.custom),
+    groupId,
+    group: groupId,
+    hidden: Boolean(hidden),
+    visible: !hidden,
     status: seed.status || TaskStatus.PAUSED,
     messages: Array.isArray(seed.messages) ? seed.messages : [],
     inputDraft: seed.inputDraft || "",
     scroll: seed.scroll || { x: 0, y: 0 },
+    createdAt: seed.createdAt || timestamp,
+    updatedAt: seed.updatedAt || timestamp,
+  };
+}
+
+export function createGroup(seed) {
+  const timestamp = now();
+
+  return {
+    id: seed.id,
+    name: seed.name,
+    collapsed: Boolean(seed.collapsed),
     createdAt: seed.createdAt || timestamp,
     updatedAt: seed.updatedAt || timestamp,
   };
@@ -45,7 +69,10 @@ export class TaskManager {
   constructor(storageManager) {
     this.storageManager = storageManager;
     this.tasks = this.loadTasks();
-    this.activeTaskId = this.tasks[0]?.id;
+    this.groups = this.loadGroups();
+    this.migrateForAppVersion(window.aiChatHub?.version || "unknown");
+    this.normalizeTaskGroups();
+    this.activeTaskId = this.all()[0]?.id;
   }
 
   loadTasks() {
@@ -94,8 +121,82 @@ export class TaskManager {
     this.storageManager.writeJson(TASKS_STORAGE_KEY, this.tasks);
   }
 
+  persistGroups() {
+    this.storageManager.writeJson(GROUPS_STORAGE_KEY, this.groups);
+  }
+
+  migrateForAppVersion(currentVersion) {
+    const savedVersion = this.storageManager.readString(APP_VERSION_STORAGE_KEY);
+
+    if (savedVersion === currentVersion) {
+      return;
+    }
+
+    this.tasks = this.tasks.map((task) => ({
+      ...task,
+      inputDraft: "",
+      messages: [],
+      scroll: { x: 0, y: 0 },
+      updatedAt: now(),
+    }));
+    this.persist();
+    this.storageManager.writeString(APP_VERSION_STORAGE_KEY, currentVersion);
+  }
+
+  loadGroups() {
+    const saved = this.storageManager.readJson(GROUPS_STORAGE_KEY);
+    const defaultGroup = createGroup({
+      id: DEFAULT_GROUP_ID,
+      name: text.defaultGroupName,
+      collapsed: false,
+    });
+
+    if (!Array.isArray(saved) || saved.length === 0) {
+      return [defaultGroup];
+    }
+
+    const groups = saved
+      .filter((group) => group && group.id && group.name)
+      .map((group) => createGroup(group));
+
+    if (!groups.some((group) => group.id === DEFAULT_GROUP_ID)) {
+      groups.unshift(defaultGroup);
+    }
+
+    return groups;
+  }
+
+  normalizeTaskGroups() {
+    const groupIds = new Set(this.groups.map((group) => group.id));
+    let changed = false;
+
+    this.tasks = this.tasks.map((task) => {
+      if (groupIds.has(task.groupId)) {
+        return { ...task, group: task.groupId, visible: !task.hidden };
+      }
+
+      changed = true;
+      return { ...task, groupId: DEFAULT_GROUP_ID, group: DEFAULT_GROUP_ID, visible: !task.hidden };
+    });
+
+    if (changed) {
+      this.persist();
+    }
+  }
+
   all() {
-    return this.tasks;
+    return this.tasks.filter((task) => !task.deleted);
+  }
+
+  allGroups() {
+    return this.groups;
+  }
+
+  grouped() {
+    return this.groups.map((group) => ({
+      ...group,
+      tasks: this.tasks.filter((task) => task.groupId === group.id && !task.hidden && !task.deleted),
+    }));
   }
 
   active() {
@@ -103,7 +204,7 @@ export class TaskManager {
   }
 
   get(taskId) {
-    return this.tasks.find((task) => task.id === taskId);
+    return this.tasks.find((task) => task.id === taskId && !task.deleted);
   }
 
   setActive(taskId) {
@@ -118,14 +219,65 @@ export class TaskManager {
     this.persist();
   }
 
-  remove(taskId) {
-    const task = this.get(taskId);
-    if (!task?.custom) {
+  addGroup(name) {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      throw new Error(text.groupNameRequired);
+    }
+
+    if (this.groups.some((group) => group.name.toLowerCase() === trimmedName.toLowerCase())) {
+      throw new Error(text.duplicateGroupName);
+    }
+
+    const group = createGroup({
+      id: `group-custom-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name: trimmedName,
+    });
+
+    this.groups = [...this.groups, group];
+    this.persistGroups();
+    return group;
+  }
+
+  removeGroup(groupId) {
+    if (groupId === DEFAULT_GROUP_ID) {
+      throw new Error(text.deleteDefaultGroupDenied);
+    }
+
+    const group = this.groups.find((item) => item.id === groupId);
+    if (!group) {
       return null;
     }
 
-    this.tasks = this.tasks.filter((item) => item.id !== taskId);
-    this.activeTaskId = this.tasks[0]?.id;
+    this.tasks = this.tasks.map((task) =>
+      task.groupId === groupId
+        ? {
+            ...task,
+            groupId: DEFAULT_GROUP_ID,
+            group: DEFAULT_GROUP_ID,
+            updatedAt: now(),
+          }
+        : task
+    );
+    this.groups = this.groups.filter((item) => item.id !== groupId);
+    this.persist();
+    this.persistGroups();
+    return group;
+  }
+
+  remove(taskId) {
+    const task = this.tasks.find((item) => item.id === taskId && !item.deleted);
+    if (!task) {
+      return null;
+    }
+
+    this.tasks = task.custom
+      ? this.tasks.filter((item) => item.id !== taskId)
+      : this.tasks.map((item) =>
+          item.id === taskId ? { ...item, deleted: true, updatedAt: now() } : item
+        );
+    this.activeTaskId = this.all()[0]?.id;
     this.persist();
     return task;
   }
@@ -134,6 +286,101 @@ export class TaskManager {
     this.tasks = this.tasks.map((task) =>
       task.id === taskId ? { ...task, ...patch, updatedAt: now() } : task
     );
+    this.persist();
+  }
+
+  renameTask(taskId, title) {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      throw new Error(text.nameRequired);
+    }
+
+    if (
+      this.all().some(
+        (task) => task.id !== taskId && task.title.toLowerCase() === trimmedTitle.toLowerCase()
+      )
+    ) {
+      throw new Error(text.duplicateName);
+    }
+
+    this.update(taskId, { title: trimmedTitle, name: trimmedTitle });
+  }
+
+  renameGroup(groupId, name) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      throw new Error(text.groupNameRequired);
+    }
+
+    if (
+      this.groups.some(
+        (group) => group.id !== groupId && group.name.toLowerCase() === trimmedName.toLowerCase()
+      )
+    ) {
+      throw new Error(text.duplicateGroupName);
+    }
+
+    this.updateGroup(groupId, { name: trimmedName });
+  }
+
+  updateGroup(groupId, patch) {
+    this.groups = this.groups.map((group) =>
+      group.id === groupId ? { ...group, ...patch, updatedAt: now() } : group
+    );
+    this.persistGroups();
+  }
+
+  toggleGroup(groupId) {
+    const group = this.groups.find((item) => item.id === groupId);
+    if (!group) {
+      return;
+    }
+
+    this.updateGroup(groupId, { collapsed: !group.collapsed });
+  }
+
+  reorderGroup(sourceGroupId, targetGroupId) {
+    if (sourceGroupId === targetGroupId) {
+      return;
+    }
+
+    const sourceIndex = this.groups.findIndex((group) => group.id === sourceGroupId);
+    const targetIndex = this.groups.findIndex((group) => group.id === targetGroupId);
+
+    if (sourceIndex < 0 || targetIndex < 0) {
+      return;
+    }
+
+    const groups = [...this.groups];
+    const [sourceGroup] = groups.splice(sourceIndex, 1);
+    groups.splice(targetIndex, 0, { ...sourceGroup, updatedAt: now() });
+    this.groups = groups;
+    this.persistGroups();
+  }
+
+  setTaskGroup(taskId, groupId) {
+    if (!this.get(taskId) || !this.groups.some((group) => group.id === groupId)) {
+      return;
+    }
+
+    this.update(taskId, { groupId, group: groupId, hidden: false, visible: true });
+  }
+
+  setTaskHidden(taskId, hidden) {
+    if (!this.get(taskId)) {
+      return;
+    }
+
+    this.update(taskId, { hidden: Boolean(hidden), visible: !hidden });
+  }
+
+  showAllTasks() {
+    this.tasks = this.tasks.map((task) => ({
+      ...task,
+      hidden: false,
+      visible: true,
+      updatedAt: now(),
+    }));
     this.persist();
   }
 
