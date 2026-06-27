@@ -104,6 +104,8 @@ npm run dist
 - 已完成：按 Windows 风格重构左侧右键操作，设置页移除业务级任务 / 分组管理入口。
 - 已完成：任务右键新增“清理缓存（保留登录状态）”，仅调用 session `clearCache()`。
 - 已完成：版本升级到 `0.5.0`，启动时版本变化会清理任务草稿和临时消息，不清登录状态。
+- 已完成：左侧任务状态点改为基于任务名称 hash 的柔和固定 HSL 色。
+- 已完成：替换应用图标、托盘 / 窗口图标资源和左上角 / 关于弹窗品牌图标。
 - 验证分组折叠和任务隐藏不会触发 WebView 销毁、登录状态清理或多 WebView 常驻。
 - 验证右键菜单和拖拽分组时不会影响当前 WebView 运行状态。
 - 验证空白区域 / 任务 / 分组三层右键菜单，以及删除任务、重命名、删除分组自动回收。
@@ -126,3 +128,15 @@ npm run dist
 
 - `DEVLOG.md`：记录做了什么、验证结果和问题。
 - `TODO.md`：勾掉或调整下一步任务。
+
+## v0.5.1 发布收尾
+
+- 已完成：顺延版本到 `0.5.1`，用于发布图标替换和柔和状态点更新，不覆盖 `v0.5.0` Release。
+- 待验证：完整 `npm run dist` 后确认 `dist/ChatHub.exe` 可启动，`releases/ChatHub-Setup-x64.exe` 与 Release 资产一致。
+- 待完成：创建 GitHub tag / Release `v0.5.1`，Release Notes 必须包含中文说明和 English Description。
+
+### v0.5.1 验证结果
+
+- 已完成：`npm run dist` 完整打包通过。
+- 已完成：`dist/ChatHub.exe` 显示版本 `0.5.1`，短暂启动验证通过。
+- 已完成：`releases/ChatHub-Setup-x64.exe` 已更新，SHA256 为 `EF27FCCF93780BBFB7B059C18050D83CC79BEE1491E1082FD34E8BA7752410DC`。

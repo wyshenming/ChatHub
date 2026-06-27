@@ -8,6 +8,20 @@ export function statusLabel(value) {
   return text[value] || value;
 }
 
+export function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return hash;
+}
+
+export function getSoftColor(name) {
+  const hash = hashString(name);
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 60%, 65%)`;
+}
+
 export function normalizeUrl(value) {
   const trimmed = value.trim();
   const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;

@@ -400,6 +400,56 @@
 - `dist\ChatHub.exe` 版本资源显示 `ProductVersion=0.5.0`、`FileVersion=0.5.0`。
 - 已短暂启动新的 `dist\ChatHub.exe`，ChatHub 进程能正常出现，随后手动停止。
 
+## 2026-06-27 Soft Random Color 状态点
+
+### 本轮已经完成
+
+- 为左侧任务状态点新增基于名称 hash 的柔和 HSL 颜色系统。
+- 新增 `hashString(str)` 和 `getSoftColor(name)`。
+- 任务圆点颜色由任务名称稳定生成，不使用 `Math.random()`。
+- 渲染层不再使用旧的 `task.color` 作为圆点颜色。
+- 选中状态增加柔和 glow，hover 时轻微提亮。
+
+### 已经修改的文件
+
+- `src/renderer/utils.js`
+- `src/renderer/renderer.js`
+- `src/renderer/styles.css`
+- `DEVLOG.md`
+- `TODO.md`
+
+### 验证结果
+
+- `node --check` 已通过：`src/renderer/utils.js`、`src/renderer/renderer.js`、`src/renderer/task-manager.js`、`src/renderer/controller.js`。
+- `rg` 确认颜色生成使用 `getSoftColor()` / `hashString()`；`Math.random()` 仅保留在自定义任务 / 分组 ID 生成中，不参与颜色。
+- 已运行 `npm run dist:dir`，生成新的 `dist\ChatHub.exe`。
+- 已短暂启动新的 `dist\ChatHub.exe`，ChatHub 进程能正常出现，随后手动停止。
+
+## 2026-06-27 替换应用图标
+
+### 本轮已经完成
+
+- 使用用户提供的新图片替换 `build/icon.png`。
+- 重新生成 `build/icon.ico`，供 Electron 窗口、托盘、exe 元数据和安装包使用。
+- 将左上角 ChatHub 旁边的品牌图标改为同一张图片。
+- 将关于弹窗中的品牌图标也改为同一张图片。
+- 调整 `.brand-mark` 样式，使其作为图片容器展示。
+
+### 已经修改的文件
+
+- `build/icon.png`
+- `build/icon.ico`
+- `src/renderer/index.html`
+- `src/renderer/styles.css`
+- `DEVLOG.md`
+
+### 验证结果
+
+- `node --check` 已通过：`src/renderer/renderer.js`、`src/renderer/utils.js`、`src/main.js`、`src/preload.js`。
+- `npm run dist` 成功，生成新的 `dist\ChatHub.exe` 和 `dist\ChatHub-Setup-x64.exe`。
+- 已将新的 `dist\ChatHub-Setup-x64.exe` 复制到 `releases\ChatHub-Setup-x64.exe`。
+- 已短暂启动新的 `dist\ChatHub.exe`，ChatHub 进程能正常出现，随后手动停止。
+
 ### 仍需后续验证
 
 - 需要人工验证三层右键菜单、重命名、删除任务、删除分组回收任务的真实交互。
@@ -434,3 +484,37 @@
 - `rg` 已确认新缓存清理通道只调用 `clearCache()`；`clearStorageData()` 仍只存在于旧的登录清理接口。
 - 已运行 `npm run dist:dir`，生成新的 `dist\ChatHub.exe`。
 - 已短暂启动新的 `dist\ChatHub.exe`，ChatHub 进程能正常出现，随后手动停止。
+
+## 2026-06-28 v0.5.1 图标与状态点发布
+
+### 本轮已经完成
+
+- 将项目版本号从 `0.5.0` 顺延到 `0.5.1`，用于创建全新的 GitHub Release，避免覆盖历史版本。
+- 保留 v0.5.0 的版本迁移逻辑；升级到 v0.5.1 时仍只清理任务草稿、临时消息和滚动草稿，不清理 cookies / session / localStorage / IndexedDB。
+- 同步更新 `releases/README.md` 的当前版本和本版本说明。
+
+### 已经修改的文件
+
+- `package.json`
+- `package-lock.json`
+- `src/preload.js`
+- `releases/README.md`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证计划
+
+- 重新运行 `node --check` 检查主要 JS 文件。
+- 重新运行完整 `npm run dist`，生成 x64 unpacked exe 和 NSIS 安装包。
+- 短暂启动 `dist/ChatHub.exe`，确认进程可启动后关闭。
+- 将新安装包复制到 `releases/ChatHub-Setup-x64.exe` 并发布 GitHub Release `v0.5.1`。
+
+### v0.5.1 打包验证结果
+
+- `node --check` 已通过：`src/main.js`、`src/preload.js`、renderer 主要模块。
+- `npm run dist` 已成功，生成 `dist/ChatHub.exe` 和 `dist/ChatHub-Setup-x64.exe`。
+- `dist/ChatHub.exe` 版本资源显示 `ProductVersion=0.5.1`、`FileVersion=0.5.1`。
+- 已复制安装包到 `releases/ChatHub-Setup-x64.exe`。
+- 安装包 SHA256：`EF27FCCF93780BBFB7B059C18050D83CC79BEE1491E1082FD34E8BA7752410DC`。
+- 已短暂启动 `dist/ChatHub.exe`，ChatHub 进程正常出现，随后已停止。

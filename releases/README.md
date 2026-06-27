@@ -1,8 +1,8 @@
-﻿# ChatHub Releases / ChatHub 发布说明
+# ChatHub Releases / ChatHub 发布说明
 
 ## 中文
 
-当前版本：v0.5.0
+当前版本：v0.5.1
 
 当前安装包：
 
@@ -24,6 +24,8 @@ ChatHub-Setup-x64.exe
 - 设置中新增关于窗口，展示版本、作者和 GitHub 仓库信息。
 - 可执行文件元数据写入作者：染泓如梦QAQ。
 - 设置中移除了手动“挂起当前任务”和“标记完成”，切换任务时仍会自动保存当前状态。
+- 左侧任务状态点改为基于任务名称生成的柔和固定颜色，刷新后颜色保持一致。
+- 应用图标、窗口图标、托盘/安装包图标和左上角品牌图标已统一更新。
 - 单实例运行机制：重复打开程序时会激活已有窗口，不会创建第二个应用窗口。
 - 本机保存网页登录状态，安装包不包含个人账号信息。
 
@@ -35,7 +37,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.5.0
+Current version: v0.5.1
 
 Current installer:
 
@@ -57,6 +59,8 @@ ChatHub-Setup-x64.exe
 - About dialog in settings with version, author, and GitHub repository information.
 - Executable metadata includes the author: 染泓如梦QAQ.
 - Manual pause/finish actions were removed from settings; switching tasks still saves the current state automatically.
+- Sidebar task indicators now use stable soft colors generated from task names, so colors remain consistent after refresh.
+- App, window, tray/installer, and sidebar brand icons were updated to the new ChatHub icon.
 - Single-instance behavior: launching the app again activates the existing window instead of creating a second app window.
 - Website login state is stored locally. The installer does not include personal account data.
 

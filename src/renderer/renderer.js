@@ -3,7 +3,7 @@ import { APP_AUTHOR, APP_REPOSITORY_URL, DEFAULT_GROUP_ID } from "./constants.js
 import { StorageManager } from "./storage-manager.js";
 import { TaskManager } from "./task-manager.js";
 import { WebViewManager } from "./webview-manager.js";
-import { statusLabel } from "./utils.js";
+import { getSoftColor, statusLabel } from "./utils.js";
 
 const serviceList = document.querySelector("#service-list");
 const sidebar = document.querySelector(".sidebar");
@@ -251,7 +251,7 @@ const view = {
 
           const dot = document.createElement("span");
           dot.className = "service-dot";
-          dot.style.background = task.color;
+          dot.style.background = getSoftColor(task.title || task.name || task.id);
 
           const copy = document.createElement("span");
           copy.className = "task-copy";
