@@ -16,6 +16,7 @@ const settingsModal = document.querySelector("#settings-modal");
 const closeSettingsButton = document.querySelector("#close-settings");
 const openAboutButton = document.querySelector("#open-about");
 const closeBehaviorInputs = [...document.querySelectorAll("input[name='close-behavior']")];
+const maxWebViewPoolSizeSelect = document.querySelector("#max-webview-pool-size");
 const aboutModal = document.querySelector("#about-modal");
 const closeAboutButton = document.querySelector("#close-about");
 const openRepositoryButton = document.querySelector("#open-repository");
@@ -332,6 +333,10 @@ const view = {
     });
   },
 
+  setMaxWebViewPoolSize(value) {
+    maxWebViewPoolSizeSelect.value = String(value);
+  },
+
   setFormError(message) {
     formError.textContent = message;
   },
@@ -437,6 +442,10 @@ closeBehaviorInputs.forEach((input) => {
       controller.setCloseBehavior(input.value);
     }
   });
+});
+
+maxWebViewPoolSizeSelect.addEventListener("change", () => {
+  controller.setMaxWebViewPoolSize(maxWebViewPoolSizeSelect.value);
 });
 
 closeAddSiteButton.addEventListener("click", () => {

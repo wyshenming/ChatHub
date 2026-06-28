@@ -151,3 +151,83 @@
 **小米：** 用户要求“按照要求提交仓库和 Releases”。由于 `v0.5.0` 已经发布，按照 `AGENTS.md` 的规则不能覆盖旧 Release，只能顺延到新的 `v0.5.1`。
 **小米：** 本次发布范围是柔和固定状态点、新 ChatHub 图标、左上角 / 关于弹窗品牌图标、以及对应安装包资源更新。版本迁移逻辑沿用现有机制，只清理任务草稿和临时消息，不碰登录状态。
 **小米：** 发布前需要重新完整打包，复制安装包到 `releases/ChatHub-Setup-x64.exe`，再创建全新的 GitHub tag 和 Release，保持历史版本可回溯。
+
+### 2026-06-28：WebViewManager 性能日志
+
+**小米：** 用户希望先定位 WebView 切换卡顿来源，而不是立即优化。因此本轮只增加监控日志，不改变单 WebView 复用架构。
+**小米：** 日志放在 WebViewManager 内部，因为创建、loadURL、did-finish-load 和任务切换入口都集中在这里，能直接判断是否发生重建、页面重载、网络耗时或 Chromium 恢复耗时。
+**小米：** 内存信息在 renderer 侧只能低风险读取 `performance.memory`，不可用时明确输出 `unavailable`，避免为了监控额外扩大 preload / IPC 边界。
+
+### 2026-06-28：WebView 性能日志落盘
+
+**小米：** 用户觉得控制台日志不方便分析，希望生成本地日志文件。因此新增主进程落盘 IPC，把 renderer 侧 WebView 性能日志追加写入用户数据目录。
+**小米：** 日志路径选择 `%APPDATA%\AI Chat Hub\logs\webview-performance.log`，因为这是 Electron 当前 `userData` 所在位置，和登录数据同属应用本地数据区，但只新增日志文件，不读取或清理登录状态。
+**小米：** WebViewManager 仍然是唯一日志来源，主进程只负责写文件，避免把 WebView 生命周期或任务逻辑迁移到 System 层。
+
+### 2026-06-28：排查 WebView 重复 loadURL
+
+**小米：** 用户从日志中发现 `Reuse Existing: true` 后仍然出现 `loadURL()` 和完整加载事件，怀疑性能问题来自重复导航。
+**小米：** 排查后确认：当前确实复用了同一个 WebView 对象，但 `loadTask()` 每次都会进入 `loadTaskUrl()`，旧逻辑没有比较当前 URL 和目标 URL，所以会无条件导航。
+**小米：** 本轮只做最小修正：增加 `Current URL / Target URL / Need Reload` 诊断日志，并在 URL 相同的情况下跳过 `loadURL()`。跨不同站点仍然需要导航，因为单 WebView 只能同时承载一个页面实例。
+
+### 2026-06-28：WebView 缓存池架构升级
+
+**小米：** 用户确认单 WebView 复用仍会在跨任务切换时触发 `loadURL()`，因此要求升级为多 WebView 缓存池，用内存换切换速度。
+**小米：** 实施边界定为只重构 WebView 管理层：Controller 仍然调用 `loadTask()`、`reload()`、`captureState()`，TaskManager 和 UI 结构不重写。
+**小米：** WebViewManager 内部新增 `webviewPool`，每个任务第一次打开时创建 WebView，之后通过显示 / 隐藏切换。缓存命中输出 `Show Cached`，不调用 `loadURL()`。
+**小米：** 需要注意池化会提高内存占用，这是预期交换。后续如果内存过高，应单独设计池容量或 LRU 回收，而不是回退到每次切换 reload。
+
+### 2026-06-28：WebViewPool 最大常驻数量可配置
+
+**小米：** 用户希望 WebViewPool 不无限增长，而是把最大常驻数量做成设置项，默认 4，让用户在切换速度和内存占用之间取舍。
+**小米：** 实现边界仍然放在 WebViewManager：设置页只收集数值，Controller 转发，StorageManager 持久化；真正的 LRU 淘汰和日志由 WebViewManager 负责。
+**小米：** 淘汰策略只移除池内 WebView，不删除 Task，也不清理 Electron session 或站点存储。这样下次点击任务时会重新创建 WebView，但登录状态仍由原持久化分区保留。
+
+### 2026-06-28：Rolling Log 日志滚动系统
+
+**小米：** 用户希望保留 WebView 性能日志排查能力，但不能让 `logs` 目录无限增长。因此本轮把性能日志从旧的 `webview-performance.log` 收敛到统一命名的 `webview.log`，并在主进程里增加滚动写入能力。
+**小米：** 日志滚动属于系统层能力，不应该进入 WebViewPool 或 TaskManager。renderer 仍然只上报 WebView 性能事件，主进程只负责异步写入和裁剪日志文件。
+**小米：** 裁剪策略选择“超过 10MB 时保留最近约 5MB”，而不是清空日志。这样既能避免磁盘持续膨胀，也能保留最近一次卡顿或加载失败附近的上下文。
+**小米：** 安全边界保持很窄：只处理 ChatHub 自己 `logs` 目录下映射到的 `.log` 文件，不触碰 cookies、session、localStorage、IndexedDB，也不改变任务、分组或 WebView 缓存池状态。
+**小米：** Session ID 使用本地时间生成，格式如 `[Session: 2026-06-28T21-44-13]`，方便两台设备或多次启动时直接从日志里区分是哪一次运行周期。
+
+### 2026-06-28：NSIS 卸载流程优化
+
+**小米：** 用户发现从安装目录运行 `uninstall.exe` 后仍残留 Electron runtime 文件，说明问题发生在安装包卸载层，不应该通过应用业务代码解决。
+**小米：** 当前项目没有自定义 NSIS include，因此最小风险方案是新增 `build/installer.nsh` 并挂到 `package.json` 的 `build.nsis.include`，不改 WebView、TaskManager 或 renderer 逻辑。
+**小米：** 卸载前关闭进程必须覆盖 Electron 子进程，所以使用 `taskkill /T /F /IM ChatHub.exe` 关闭进程树。这样可以避免 DLL、resources 或 `ChatHub.exe` 因占用而删不掉。
+**小米：** 用户数据默认必须保留，因为登录状态和设置恢复依赖 AppData。删除用户数据只能在卸载确认框中由用户主动选择。
+**小米：** 因为主进程实际把 `userData` 设置为 `%APPDATA%\AI Chat Hub`，而用户需求里也提到 `%APPDATA%\ChatHub`，所以“删除所有数据”覆盖两类路径，但保留选项完全不碰这些目录。
+**小米：** 安装目录清理作为 `customUnInstall` 兜底执行，继续依赖 electron-builder 默认卸载流程，同时额外删除 `$INSTDIR` 下的 runtime 文件和目录，并对卸载器自身使用重启后删除机制。
+
+### 2026-06-28：NSIS 卸载残留二次修复
+
+**小米：** 用户反馈仍残留安装目录并触发 Windows 重启删除提示，说明 `/REBOOTOK` 不是合适方案。真正需要解决的是卸载期间进程和当前目录占用，而不是把删除推迟到重启。
+**小米：** 因此在 Electron 主进程新增 `--quit-for-uninstall` 入口，让卸载器先启动一个第二实例通知正在运行的 ChatHub 自己退出。运行实例收到参数后销毁窗口和托盘，调用 `app.quit()`，再用 `app.exit(0)` 做 1 秒兜底。
+**小米：** NSIS 侧仍保留强制兜底：如果优雅退出后仍存在 `ChatHub.exe`，再执行 `taskkill /T /F /IM ChatHub.exe` 关闭主进程、renderer、GPU、utility 等同名 Electron 子进程。
+**小米：** 移除所有 `/REBOOTOK`，避免 pending file rename 和重启提示。安装目录清理使用普通 `RMDir /r "$INSTDIR"`，再启动 `%TEMP%\chathub-cleanup.cmd` 做延迟 `rmdir`。
+**小米：** 烟测发现延迟脚本如果继承安装目录作为当前目录，会导致空目录删不掉。所以脚本第一步必须 `cd /d "%TEMP%"`，离开安装目录后再延迟删除。
+**小米：** 最终使用独立测试目录完成静默安装、启动、卸载验证：卸载后测试目录不存在，ChatHub 进程数为 0，AppData 用户数据仍保留。
+
+### 2026-06-28：隐藏卸载后的延迟清理窗口
+
+**小米：** 用户确认卸载已经干净，但卸载后会短暂弹出命令提示符窗口。这个窗口来自 `%TEMP%\chathub-cleanup.cmd`，不是卸载失败，而是后台延迟清理脚本的可见控制台。
+**小米：** 为了保留“卸载器退出后再删安装目录”的可靠性，同时不打扰用户，将 `.cmd` 换成 `.vbs`，通过 `wscript.exe` 执行。`wscript` 不会弹命令提示符窗口。
+**小米：** VBS 仍然先切到 `%TEMP%`，等待 3 秒，再删除 `$INSTDIR` 并删除自身。也就是说只改变执行外观，不改变删除策略和用户数据保留策略。
+**小米：** 重新打包后用独立测试目录验证：卸载后目录不存在、ChatHub 进程数为 0、AppData 保留、临时 VBS 自删。
+
+### 2026-06-28：卸载确认界面改为 Wizard 风格
+
+**小米：** 用户希望卸载确认界面像 Clash Verge 那类 Windows 安装向导，而不是工程化 MessageBox。核心是降低决策复杂度：用户只需要理解“卸载程序”和“是否删除用户数据”。
+**小米：** electron-builder 的 `customUninstallPage` 插在卸载进度页之后，太晚了，不能用于决定是否删除用户数据。因此改用 `customUnWelcomePage` 替换默认卸载欢迎页，让复选框选择发生在真正卸载前。
+**小米：** 页面内容只保留标题、说明、安装目录和一个复选框。不展示 Cookies、IndexedDB、GPUCache 等内部字段，因为这些信息会增加普通用户的不安全感，也不利于快速判断。
+**小米：** 默认不勾选删除用户数据，延续当前安全策略：卸载程序默认只删除安装目录；登录状态、设置、任务、日志只有用户主动勾选时才删除。
+**小米：** NSIS 模板不支持本轮尝试的 `MUI_HEADER_TEXT` 宏，所以改为在自定义页面正文中绘制标题和说明。按钮文字通过修改 Next 按钮为“卸载”实现。
+
+### 2026-06-28：发布 v0.6.0
+
+**小米：** 用户确认卸载已经干净，并要求同步仓库、版本号改为 `0.6.0`、按发布规则发布 GitHub Release。
+**小米：** 本次版本重点不只是一个卸载 UI，而是包含 WebViewPool、可配置池大小、Rolling Log、NSIS 卸载清理链路、隐藏延迟清理窗口和 Wizard 风格卸载页，因此适合作为 `0.6.0` 发布。
+**小米：** 发布规则要求不能覆盖旧 Release，所以创建全新 `v0.6.0` tag 和 Release，并使用中英双语 Release Notes。
+**小米：** 发布前必须完整 `npm run dist`，并确认 `FileVersion` / `ProductVersion` 都是 `0.6.0`，再复制安装包到 `releases/ChatHub-Setup-x64.exe`。
+**小米：** 验证仍要覆盖卸载链路：安装、启动、卸载后安装目录不存在，ChatHub 进程数为 0，AppData 保留，临时清理脚本自删。

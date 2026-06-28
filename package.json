@@ -1,6 +1,6 @@
 {
   "name": "chathub",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "ChatHub",
   "productName": "ChatHub",
   "author": "染泓如梦QAQ",
@@ -45,7 +45,8 @@
     "nsis": {
       "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "include": "build/installer.nsh"
     }
   },
   "devDependencies": {

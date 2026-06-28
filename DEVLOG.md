@@ -518,3 +518,418 @@
 - 已复制安装包到 `releases/ChatHub-Setup-x64.exe`。
 - 安装包 SHA256：`EF27FCCF93780BBFB7B059C18050D83CC79BEE1491E1082FD34E8BA7752410DC`。
 - 已短暂启动 `dist/ChatHub.exe`，ChatHub 进程正常出现，随后已停止。
+
+## 2026-06-28 WebViewManager 性能日志
+
+### 本轮已经完成
+
+- 在 `WebViewManager` 中新增性能日志输出，用于定位切换卡顿来源。
+- 记录 WebView 创建、attach、销毁 / 移除、loadURL 调用、did-start-loading、did-stop-loading、did-finish-load、did-fail-load。
+- 切换任务时输出任务名、动作、是否复用现有 WebView、切换耗时、WebView 数量和内存信息。
+- 内存信息优先读取 Chromium renderer 可见的 `performance.memory`；不可用时输出 `unavailable`。
+- 未修改 WebView 生命周期逻辑，未新增 WebView 创建逻辑，未做性能优化。
+
+### 已经修改的文件
+
+- `src/renderer/webview-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证计划
+
+- 运行 `node --check src/renderer/webview-manager.js`。
+- 运行 `npm run dist:dir`，确认构建不受影响。
+- 短暂启动 `dist/ChatHub.exe`，确认进程可启动。
+
+### 验证结果
+
+- `node --check` 已通过：`src/renderer/webview-manager.js`、`src/renderer/renderer.js`、`src/renderer/controller.js`。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- `npm run dist:dir` 成功，生成新的 unpacked x64 应用。
+- 已短暂启动 `dist/ChatHub.exe`，ChatHub 进程正常出现，随后已停止。
+
+## 2026-06-28 WebView 性能日志落盘
+
+### 本轮已经完成
+
+- 新增主进程 IPC `append-webview-performance-log`，将 WebView 性能日志追加写入本地文件。
+- preload 暴露 `appendWebViewPerformanceLog(entry)` 给 renderer 使用。
+- `WebViewManager` 的性能日志现在同时输出到 Console 和本地日志文件。
+- 日志文件路径：`%APPDATA%\AI Chat Hub\logs\webview-performance.log`。
+- 未修改 WebView 生命周期、任务切换逻辑或登录状态策略。
+
+### 已经修改的文件
+
+- `src/main.js`
+- `src/preload.js`
+- `src/renderer/webview-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check` 已通过：`src/main.js`、`src/preload.js`、`src/renderer/webview-manager.js`。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- `npm run dist:dir` 成功。
+- 已短暂启动 `dist/ChatHub.exe`，日志文件成功生成并写入。
+- 本次验证日志路径：`C:\Users\Administer\AppData\Roaming\AI Chat Hub\logs\webview-performance.log`。
+
+## 2026-06-28 WebView 重复 loadURL 排查
+
+### 排查结论
+
+- 当前 `Reuse Existing: true` 只表示复用了同一个 `<webview>` DOM / Chromium 容器对象，并不表示复用了每个任务的页面实例。
+- 切换任务链路为：`controller.selectTask()` -> `webViewManager.loadTask()` -> `loadTaskUrl()`。
+- 原逻辑在 `loadTaskUrl()` 中无条件执行 `webview.loadURL(targetUrl)`，所以跨任务切换必然触发页面重新导航。
+- 这属于逻辑层面的重复导航问题，但在“单 WebView 执行器”架构下，切换到不同站点 URL 时仍然必须导航；真正做到多个任务页面都不重新加载，需要多页面实例缓存或多 WebView / BrowserView 池，属于后续架构方案，当前未做。
+
+### 本轮已经完成
+
+- 切换任务时新增日志字段：`Current URL`、`Target URL`、`Need Reload`。
+- 新增 `Switch Decision` 日志，用于说明是否需要调用 `loadURL()` 以及原因。
+- 增加轻量防重复导航：当当前 URL 与目标 URL 一致时，不再调用 `loadURL()`，只恢复任务上下文并标记 ready。
+- 未改变 WebView 创建 / 销毁策略，未引入多 WebView，未重构架构。
+
+### 验证结果
+
+- `node --check` 已通过：`src/renderer/webview-manager.js`、`src/renderer/controller.js`、`src/main.js`、`src/preload.js`。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- `npm run dist:dir` 成功。
+- 已短暂启动 `dist/ChatHub.exe`，日志文件成功写入 `Switch Decision`、`Current URL`、`Target URL`、`Need Reload`。
+
+## 2026-06-28 WebView 缓存池架构升级
+
+### 本轮已经完成
+
+- 将 `WebViewManager` 从单 WebView 反复 `loadURL()` 切换，升级为 WebView 缓存池机制。
+- 新增 `webviewPool = Map<TaskId, WebViewRecord>`，每个任务第一次打开时创建独立 WebView，后续切换复用该 WebView。
+- 切换任务时通过 `visibility / opacity / pointer-events / z-index` 显示目标 WebView、隐藏其它 WebView，不销毁、不重新创建。
+- 缓存命中时输出 `Action: Show Cached`，且不调用 `loadURL()`。
+- 首次创建、目标 URL 未加载、任务配置 URL 变化时才调用 `loadURL()`。
+- 区分 `isLoadingTarget`，避免 WebView 初始 `about:blank` 加载被误认为任务页面缓存命中。
+- 删除任务时调用 `webViewManager.removeTask(taskId)`，释放对应池内 WebView，避免隐藏 WebView 常驻泄漏。
+- 保留现有 Controller / TaskManager / UI 结构，未重写任务系统，未改变登录状态策略。
+
+### 已经修改的文件
+
+- `src/renderer/webview-manager.js`
+- `src/renderer/controller.js`
+- `src/main.js`
+- `src/preload.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check` 已通过：`src/renderer/webview-manager.js`、`src/renderer/controller.js`、`src/renderer/renderer.js`、`src/main.js`、`src/preload.js`。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- `npm run dist:dir` 成功。
+- 已短暂启动 `dist/ChatHub.exe`，进程正常出现，日志文件正常写入 `Pool Size`、`WebView Count`、`Switch Decision`、`loadURL` 等字段。
+
+### 仍需人工验证
+
+- 在真实窗口中依次切换 ChatGPT / Gemini / DeepSeek，再切回已打开任务。
+- 缓存命中时日志应出现 `Action: Show Cached`、`Need Reload: false`。
+- 已缓存任务切回时不应出现新的 `Action: loadURL`。
+- 观察 `Pool Size` 是否随首次打开任务增加，并在删除任务后释放对应 WebView。
+
+## 2026-06-28 WebViewPool 最大常驻数量设置
+
+### 本轮已经完成
+
+- 在设置页新增“性能”区域。
+- 新增配置项 `maxWebViewPoolSize`，可选值为 2 / 3 / 4 / 5 / 6，默认值为 4。
+- 配置持久化到 renderer localStorage：`chathub.performanceSettings.v1`。
+- 应用启动时读取配置并应用到 WebViewPool。
+- 设置修改后立即调用 `webViewManager.setMaxWebViewPoolSize()`，并立即执行 LRU 淘汰检查。
+- WebViewPool 超过上限时淘汰最久未访问的非当前 WebView。
+- 当前正在显示的 WebView 永远不淘汰。
+- 淘汰只销毁 WebView DOM，不删除任务，不清理 cookies / localStorage / sessionStorage / IndexedDB。
+- 下次点击被淘汰任务时会重新创建 WebView 并加载任务 URL。
+- 新增 `[WebViewPool] Action: Evict` 日志，包含 Max Pool Size、Pool Size Before / After、Evicted Task。
+
+### 已经修改的文件
+
+- `src/renderer/index.html`
+- `src/renderer/styles.css`
+- `src/renderer/renderer.js`
+- `src/renderer/controller.js`
+- `src/renderer/storage-manager.js`
+- `src/renderer/webview-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check` 已通过：`src/renderer/webview-manager.js`、`src/renderer/controller.js`、`src/renderer/renderer.js`、`src/renderer/storage-manager.js`。
+- `npm run dist:dir` 成功。
+- 已短暂启动 `dist/ChatHub.exe`，进程正常出现，日志文件正常写入。
+
+### 仍需人工验证
+
+- 在设置中将 WebView 最大常驻数量改为 2 或 3。
+- 依次打开超过上限数量的任务。
+- 日志应出现 `[WebViewPool] Action: Evict`。
+- 确认被淘汰任务仍在任务列表中，下次点击会重新创建 WebView 并加载页面。
+- 确认当前正在显示的 WebView 不会被淘汰。
+
+## 2026-06-28 Rolling Log 日志滚动系统
+
+### 本轮已经完成
+
+- 将 WebView 性能日志统一迁移到 `%APPDATA%\AI Chat Hub\logs\webview.log`。
+- 新增 `maxLogFileSize = 10 * 1024 * 1024`，单个日志文件超过 10MB 后触发滚动裁剪。
+- 裁剪时保留最近约 5MB 内容，删除最旧内容，并继续追加新日志。
+- 每次应用启动生成本地时间 Session ID，例如 `[Session: 2026-06-28T21-44-13]`，本次启动写入的日志都会带上该 Session ID。
+- 日志写入使用主进程异步 `fs.promises.appendFile`，写入失败只输出 `console.warn`，不让应用崩溃。
+- 日志分类通过 `logFileNames` 预留扩展入口，目前启用 `webview.log`，后续可扩展 `network.log`、`renderer.log`、`crash.log`。
+- 未修改 WebViewPool、TaskManager、设置数据或任何登录状态清理逻辑。
+
+### 已经修改的文件
+
+- `src/main.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check src/main.js` 通过。
+- `npm run dist:dir` 通过。
+- 使用 11MB 测试日志启动 `dist/ChatHub.exe` 后，`webview.log` 从 `11534464` 字节裁剪到 `5245843` 字节。
+- 验证日志头包含 `[RollingLog] Trimmed oldest log content.` 和本地时间 Session ID。
+
+### 已知说明
+
+- 新版本不再写入旧路径 `%APPDATA%\AI Chat Hub\logs\webview-performance.log`。
+- 本轮只限制 ChatHub 自己的 `logs/*.log` 写入目标，不删除用户数据，不清理 cookies / session / localStorage / IndexedDB。
+
+## 2026-06-28 NSIS 卸载流程优化
+
+### 本轮已经完成
+
+- 新增 `build/installer.nsh`，并在 `package.json` 的 `build.nsis.include` 中接入。
+- 卸载前检查 `ChatHub.exe` 是否仍在运行；如果运行，提示用户确认后使用 `taskkill /T /F /IM ChatHub.exe` 关闭主进程和 Electron 子进程。
+- 卸载程序默认只删除安装目录程序文件，默认保留用户数据。
+- 非静默卸载时新增确认框：是否同时删除用户数据。
+- 选择保留时，不删除设置、任务、日志、Cookies、Cache、Local Storage、IndexedDB、GPUCache。
+- 选择删除时，删除当前项目可能使用过的用户数据目录：
+  - `%APPDATA%\AI Chat Hub`
+  - `%LOCALAPPDATA%\AI Chat Hub`
+  - `%APPDATA%\ChatHub`
+  - `%LOCALAPPDATA%\ChatHub`
+  - `%APPDATA%\chathub`
+  - `%LOCALAPPDATA%\chathub`
+- 卸载结束后追加兜底清理 `$INSTDIR` 下的 `ChatHub.exe`、`resources/`、`locales/`、Electron DLL、`.dat`、`.bin`、`.pak` 等程序文件。
+- 旧方案曾尝试用重启后删除兜底；该方案已在后续二次修复中移除，避免触发 Windows 重启删除提示。
+
+### 已经修改的文件
+
+- `build/installer.nsh`
+- `package.json`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- 第一次打包因 NSIS 变量只在卸载器阶段使用而触发 warning-as-error，已通过 `BUILD_UNINSTALLER` 条件修正。
+- `npm run dist` 完整打包通过。
+- 已更新 `dist\ChatHub-Setup-x64.exe` 和 `releases\ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`6BB8A5BF5A8050EFE1809626EF3346034D24A0838547BF636A07463F0C81BA7E`。
+
+### 仍需人工验证
+
+- 使用新安装包安装到测试目录，例如 `D:\ChatHub`。
+- 启动 ChatHub 后从安装目录运行 `uninstall.exe`。
+- 选择“保留用户数据”后确认安装目录不再残留 `ChatHub.exe`、`resources/`、DLL、`.dat`、`.bin` 等程序文件。
+- 确认 `%APPDATA%\AI Chat Hub` 仍然保留，重新安装后登录状态和设置可恢复。
+- 再做一次“删除所有数据”测试时，先确认不需要保留登录状态。
+
+## 2026-06-28 NSIS 卸载残留二次修复
+
+### 本轮已经完成
+
+- 新增主进程卸载退出参数 `--quit-for-uninstall`。
+- 当正在运行的 ChatHub 收到第二实例参数 `--quit-for-uninstall` 时，执行 `quitForUninstall()`：
+  - 设置 `isQuitting = true`
+  - 销毁所有窗口
+  - 销毁托盘
+  - 调用 `app.quit()`
+  - 1 秒后兜底调用 `app.exit(0)`
+- NSIS 卸载前先运行 `"$INSTDIR\ChatHub.exe" --quit-for-uninstall`，等待应用自行释放 WebView / renderer / GPU / utility 子进程。
+- 如果仍检测到 `ChatHub.exe`，再使用 `taskkill /T /F /IM ChatHub.exe` 关闭进程树。
+- 移除所有 `/REBOOTOK`，禁止使用 Windows pending file rename / 重启后删除机制。
+- 卸载阶段保留 `RMDir /r "$INSTDIR"` 强制递归删除安装目录。
+- 增加延迟清理脚本 `%TEMP%\chathub-cleanup.cmd`：
+  - 先 `cd /d "%TEMP%"`，避免脚本继承安装目录作为当前目录。
+  - 延迟约 3 秒。
+  - 执行 `rmdir /s /q "$INSTDIR"`。
+  - 最后删除脚本自身。
+- 默认仍保留 AppData 用户数据；只在用户选择删除数据时清理用户数据目录。
+
+### 已经修改的文件
+
+- `src/main.js`
+- `build/installer.nsh`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check src/main.js` 通过。
+- `npm run dist` 完整打包通过。
+- 使用 `D:\codex\ChatHub_UninstallSmoke` 做静默安装 / 启动 / 静默卸载烟测：
+  - 安装退出码：`0`
+  - 卸载退出码：`0`
+  - 卸载后测试安装目录存在：`False`
+  - 卸载后 ChatHub 进程数量：`0`
+  - `%APPDATA%\AI Chat Hub` 仍存在：`True`
+- 已更新 `dist\ChatHub-Setup-x64.exe` 和 `releases\ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`0A90092C8E4D19F228AE06E43D0020A3AA4A3C6F8158BFD3305C2853404A460B`。
+
+### 已知说明
+
+- 本轮已验证独立测试目录可完全删除；仍建议在真实 `D:\ChatHub` 安装目录上再做一次手动卸载确认。
+- 卸载默认保留用户数据，不影响登录状态、设置、任务和日志。
+
+## 2026-06-28 NSIS 延迟清理隐藏窗口修复
+
+### 本轮已经完成
+
+- 将卸载后的延迟清理脚本从 `%TEMP%\chathub-cleanup.cmd` 改为 `%TEMP%\chathub-cleanup.vbs`。
+- 使用 `wscript.exe` 后台执行 VBS，避免卸载完成后弹出命令提示符窗口。
+- VBS 保持原有逻辑：
+  - 切换当前目录到 `%TEMP%`
+  - 延迟 3 秒
+  - 删除安装目录
+  - 删除脚本自身
+- 未修改用户数据清理策略，默认仍保留 AppData。
+
+### 验证结果
+
+- `npm run dist` 完整打包通过。
+- 使用 `D:\codex\ChatHub_UninstallSmoke` 做静默安装 / 启动 / 静默卸载烟测：
+  - 安装退出码：`0`
+  - 卸载退出码：`0`
+  - 卸载后测试安装目录存在：`False`
+  - 卸载后 ChatHub 进程数量：`0`
+  - `%APPDATA%\AI Chat Hub` 仍存在：`True`
+  - `%TEMP%\chathub-cleanup.vbs` 已自删：`False`
+- 已更新 `dist\ChatHub-Setup-x64.exe` 和 `releases\ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`FAAC0418CD043FF6ED75A9A5D5C4B8030FBD6B4A4221972CD73FA645F4EFF8B3`。
+
+## 2026-06-28 NSIS 卸载向导页优化
+
+### 本轮已经完成
+
+- 将卸载时“是否删除用户数据”的 MessageBox 改为 Windows Wizard 风格自定义卸载页。
+- 使用 `customUnWelcomePage` 替换默认卸载欢迎页，确保用户选择发生在卸载执行前。
+- 页面只保留清晰信息层级：
+  - 标题：`卸载 ChatHub`
+  - 说明：`将从本机移除 ChatHub 程序`
+  - 安装目录：`$INSTDIR`
+  - 复选框：`删除用户数据（登录状态 / 缓存 / 日志 / 设置 / 任务）`
+- 默认不勾选删除用户数据，用户必须主动选择删除。
+- 移除 Cookies / IndexedDB / GPUCache 等技术字段展示，降低用户决策负担。
+- 将默认按钮文字改为 `卸载`，保留系统 `取消` 按钮。
+
+### 验证结果
+
+- 初次打包发现 `customUninstallPage` 插入时机太晚，改用 `customUnWelcomePage`。
+- 初次尝试 `MUI_HEADER_TEXT` 被当前 NSIS 模板拒绝，改为在自定义页正文中展示标题和说明。
+- 变量声明按 `BUILD_UNINSTALLER` 条件修正，避免主安装器编译警告。
+- `npm run dist` 完整打包通过。
+- 使用 `D:\codex\ChatHub_UninstallSmoke` 做静默安装 / 启动 / 静默卸载烟测：
+  - 安装退出码：`0`
+  - 卸载退出码：`0`
+  - 卸载后测试安装目录存在：`False`
+  - 卸载后 ChatHub 进程数量：`0`
+  - `%APPDATA%\AI Chat Hub` 仍存在：`True`
+  - `%TEMP%\chathub-cleanup.vbs` 已自删：`False`
+- 已更新 `dist\ChatHub-Setup-x64.exe` 和 `releases\ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`3D9B830CD342F2E6EB878E2C7445E8A5CBD6A163F2D00A535C06792FC2FA6847`。
+
+### 仍需人工验证
+
+- 用新安装包做一次非静默卸载，确认卸载页视觉接近 Windows 原生向导风格。
+- 确认复选框默认未勾选。
+- 确认点击 `卸载` 后仍能删除安装目录，且不弹命令提示符窗口。
+
+## 2026-06-28 NSIS 卸载向导页布局修正
+
+### 本轮已经完成
+
+- 根据非静默卸载截图反馈，确认“删除用户数据”复选框位置过低，被底部按钮区挤出可见区域。
+- 收紧卸载页纵向布局：
+  - 标题从 `14u` 调整为 `12u`
+  - 副标题上移到 `16u`
+  - 主说明上移到 `42u`
+  - 安装目录上移到 `78u`
+  - 删除用户数据复选框上移到 `112u`
+- 保持默认不勾选删除用户数据。
+- 未修改卸载清理逻辑和 AppData 保留策略。
+
+### 验证结果
+
+- `npm run dist` 完整打包通过。
+- 静默安装 / 启动 / 卸载烟测通过：
+  - 安装退出码：`0`
+  - 卸载退出码：`0`
+  - 卸载后测试安装目录存在：`False`
+  - 卸载后 ChatHub 进程数量：`0`
+  - `%APPDATA%\AI Chat Hub` 仍存在：`True`
+  - `%TEMP%\chathub-cleanup.vbs` 已自删：`False`
+- 已更新 `dist\ChatHub-Setup-x64.exe` 和 `releases\ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`B5FD706933A4709E5DEE2C75ED0ACAC085324637B64B423FBEA6AF66ED3CB6E9`。
+
+### 仍需人工验证
+
+- 用新安装包做一次非静默卸载，确认“删除用户数据”复选框已经显示在安装目录下方。
+
+## 2026-06-28 发布 v0.6.0
+
+### 本轮已经完成
+
+- 按用户要求将版本号升级到 `0.6.0`。
+- 同步更新：
+  - `package.json`
+  - `package-lock.json`
+  - `src/preload.js`
+  - `releases/README.md`
+- 完整构建 Windows x64 安装包。
+- 更新仓库内安装包副本 `releases\ChatHub-Setup-x64.exe`。
+- 准备发布 GitHub Release `v0.6.0`，遵循不覆盖旧 Release 的规则。
+
+### 版本重点
+
+- WebView 缓存池和最大常驻数量设置。
+- WebView 性能日志与 Rolling Log。
+- NSIS 卸载流程修复：退出进程、清理安装目录、保留用户数据。
+- Windows Wizard 风格卸载页，默认不删除用户数据。
+- 卸载延迟清理改为后台 VBS，避免命令提示符窗口。
+
+### 验证结果
+
+- `npm run dist` 完整打包通过。
+- 使用 `D:\codex\ChatHub_UninstallSmoke` 做静默安装 / 启动 / 静默卸载烟测：
+  - 安装退出码：`0`
+  - `FileVersion=0.6.0`
+  - `ProductVersion=0.6.0`
+  - 卸载退出码：`0`
+  - 卸载后测试安装目录存在：`False`
+  - 卸载后 ChatHub 进程数量：`0`
+  - `%APPDATA%\AI Chat Hub` 仍存在：`True`
+  - `%TEMP%\chathub-cleanup.vbs` 已自删：`False`
+- 新安装包 SHA256：`5BEA2CF1910C3CDCF62929BB4F9332CBCA24DB98C8B71ABF8757C9C50006D700`。
+
+### 发布状态
+
+- 待提交到 GitHub。
+- 待创建 tag `v0.6.0`。
+- 待创建 GitHub Release `v0.6.0` 并上传安装包。

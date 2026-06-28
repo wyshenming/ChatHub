@@ -140,3 +140,108 @@ npm run dist
 - 已完成：`npm run dist` 完整打包通过。
 - 已完成：`dist/ChatHub.exe` 显示版本 `0.5.1`，短暂启动验证通过。
 - 已完成：`releases/ChatHub-Setup-x64.exe` 已更新，SHA256 为 `EF27FCCF93780BBFB7B059C18050D83CC79BEE1491E1082FD34E8BA7752410DC`。
+
+## WebViewManager 性能日志
+
+- 已完成：新增 WebView 创建 / 销毁 / 切换 / loadURL / did-finish-load / 数量 / 内存日志。
+- 待验证：通过开发者工具或控制台观察真实切换日志，判断卡顿来自 WebView 重建、页面重载、网络请求还是 Chromium 恢复。
+- 禁止：本阶段不要基于日志直接做优化，先收集数据。
+
+### 验证结果
+
+- 已完成：`node --check` 通过。
+- 已完成：`npm run dist:dir` 通过。
+- 已完成：短暂启动 `dist/ChatHub.exe` 验证进程正常出现。
+
+## WebView 性能日志落盘
+
+- 已完成：WebView 性能日志写入 `%APPDATA%\AI Chat Hub\logs\webview-performance.log`。
+- 已完成：日志仍保留 Console 输出，便于开发者工具实时观察。
+- 已完成：短暂启动 `dist/ChatHub.exe` 后确认日志文件生成并写入。
+- 后续分析：切换 ChatGPT / Gemini / DeepSeek 后查看日志里的 `Switch Cost`、`loadURL Cost`、`did-finish-load Cost`、`WebView Count` 和 `Memory`。
+
+## WebView 重复 loadURL 排查
+
+- 已完成：确认当前 `Reuse Existing: true` 是复用 WebView 对象，不是复用每个任务的页面实例。
+- 已完成：确认旧逻辑在任务切换时无条件调用 `loadURL()`。
+- 已完成：新增 `Current URL`、`Target URL`、`Need Reload` 日志。
+- 已完成：当前 URL 与目标 URL 相同时跳过 `loadURL()`，避免同 URL 重复导航。
+- 后续分析：如果跨 ChatGPT / Gemini / DeepSeek 切换仍然 `Need Reload: true`，原因是单 WebView 当前只能承载一个页面实例；要做到跨站点无 reload，需要另行设计页面实例缓存，不在本轮改动范围内。
+
+## WebView 缓存池验证任务
+
+- 已完成：`WebViewManager` 升级为 `webviewPool = Map<TaskId, WebViewRecord>` 缓存池。
+- 已完成：任务切换改为显示 / 隐藏 WebView，缓存命中不再 `loadURL()`。
+- 已完成：删除任务时释放对应 WebView 池记录。
+- 已完成：构建和短启动验证通过。
+- 待人工验证：真实点击 ChatGPT / Gemini / DeepSeek 多轮切换，确认第二次切回已有任务时日志出现 `Action: Show Cached`，且没有新的 `Action: loadURL`。
+- 待人工验证：观察多任务打开后的内存增长是否可接受；缓存池会用内存换切换速度。
+- 后续可选：如果内存占用过高，再设计池容量上限 / LRU 回收，不要本轮继续扩大改动。
+
+## WebViewPool 最大常驻数量设置
+
+- 已完成：设置页新增“性能”区域和 `maxWebViewPoolSize` 选项。
+- 已完成：默认值为 4，可选 2 / 3 / 4 / 5 / 6。
+- 已完成：设置修改后立即应用，并触发 LRU 淘汰检查。
+- 已完成：淘汰只释放 WebView，不删除任务，不清理登录 / 站点存储。
+- 已完成：新增 `[WebViewPool] Action: Evict` 日志。
+- 待人工验证：设置为 2 后连续打开 3 个以上任务，确认日志出现 Evict，且当前 WebView 不被淘汰。
+
+## Rolling Log 日志滚动系统
+
+- 已完成：WebView 性能日志写入 `%APPDATA%\AI Chat Hub\logs\webview.log`。
+- 已完成：单个日志文件超过 10MB 后保留最近约 5MB 内容并删除最旧内容。
+- 已完成：每次启动写入本地时间 Session ID，便于区分不同启动周期。
+- 已完成：日志写入失败只 warning，不影响应用启动和 WebView 运行。
+- 已验证：11MB 测试日志启动后裁剪到约 5.25MB。
+- 待人工验证：长时间使用后确认 `webview.log` 不会持续增长到 10MB 以上。
+- 待人工验证：确认旧的 `webview-performance.log` 不再产生新内容，后续如需清理旧日志只能手动处理，不要碰登录数据目录。
+
+## NSIS 卸载流程
+
+- 已完成：新增 `build/installer.nsh`，接入 electron-builder 的 `nsis.include`。
+- 已完成：卸载前自动关闭 `ChatHub.exe` 进程树，覆盖主进程和 Electron 子进程。
+- 已完成：卸载默认保留用户数据。
+- 已完成：非静默卸载增加“是否同时删除用户数据？”确认框。
+- 已完成：选择删除时清理 `%APPDATA%` / `%LOCALAPPDATA%` 下的 `AI Chat Hub`、`ChatHub`、`chathub` 数据目录。
+- 已完成：卸载后兜底删除 `$INSTDIR` 下的程序文件、`resources/`、`locales/` 和 Electron runtime 文件。
+- 已完成：`npm run dist` 打包通过，`releases/ChatHub-Setup-x64.exe` 已更新。
+- 待人工验证：安装到 `D:\ChatHub` 后运行 `uninstall.exe`，选择保留用户数据，确认安装目录无程序文件残留。
+- 待人工验证：确认 `%APPDATA%\AI Chat Hub` 仍保留，重新安装后登录状态和设置恢复。
+- 待人工验证：需要清空环境时再测试“删除所有数据”，测试前先确认账号登录状态不需要保留。
+
+### 二次修复验证
+
+- 已完成：新增 `--quit-for-uninstall`，让运行中的 ChatHub 在卸载前通过 Electron 自身执行 `app.quit()` 和 `app.exit(0)`。
+- 已完成：移除所有 `/REBOOTOK`，避免触发 Windows 重启删除提示。
+- 已完成：使用 `%TEMP%\chathub-cleanup.vbs` 后台延迟清理安装目录，脚本先切换到 `%TEMP%` 再删除 `$INSTDIR`。
+- 已验证：`D:\codex\ChatHub_UninstallSmoke` 静默安装 / 启动 / 静默卸载后测试目录不存在。
+- 已验证：卸载后 `ChatHub` 进程数为 0，`%APPDATA%\AI Chat Hub` 仍保留。
+- 已验证：`%TEMP%\chathub-cleanup.vbs` 会自删。
+- 待人工验证：用新安装包安装到真实 `D:\ChatHub`，从安装目录运行 `Uninstall ChatHub.exe`，确认不再出现重启删除提示。
+- 待人工验证：确认卸载结束后不再弹出命令提示符窗口。
+
+### 卸载向导页
+
+- 已完成：将删除用户数据确认从 MessageBox 改为 Windows Wizard 风格卸载页。
+- 已完成：页面展示标题、说明、安装目录和唯一关键复选框。
+- 已完成：默认不勾选“删除用户数据”。
+- 已完成：不再展示 Cookies / IndexedDB / GPUCache 等技术字段。
+- 已完成：按钮文字改为 `卸载` / `取消`。
+- 已验证：`npm run dist` 打包通过。
+- 已验证：静默安装 / 启动 / 卸载烟测仍能删除测试安装目录并保留 AppData。
+- 待人工验证：非静默卸载时检查页面视觉和交互是否符合预期。
+- 已完成：根据截图将“删除用户数据”复选框从 `140u` 上移到 `112u`，避免被底部按钮区遮挡。
+- 待人工验证：确认复选框已经显示在安装目录下方。
+
+## v0.6.0 发布
+
+- 已完成：版本号升级到 `0.6.0`。
+- 已完成：`package.json`、`package-lock.json`、`src/preload.js`、`releases/README.md` 同步版本。
+- 已完成：`npm run dist` 完整打包通过。
+- 已完成：`dist/ChatHub.exe` 元数据显示 `FileVersion=0.6.0`、`ProductVersion=0.6.0`。
+- 已完成：静默安装 / 启动 / 卸载烟测通过。
+- 已完成：`releases/ChatHub-Setup-x64.exe` 已更新。
+- 待完成：提交 GitHub 仓库。
+- 待完成：创建 tag `v0.6.0`。
+- 待完成：创建 GitHub Release `v0.6.0` 并上传安装包。

@@ -12,6 +12,7 @@ export class AppController {
   }
 
   start() {
+    this.applyPerformanceSettings();
     this.emitTasks();
     this.webViewManager.loadTask(this.taskManager.active());
   }
@@ -125,6 +126,7 @@ export class AppController {
   async openSettings() {
     this.view.openSettingsModal();
     this.webViewManager.blur();
+    this.loadPerformanceSettings();
     await this.loadCloseSettings();
   }
 
@@ -159,6 +161,23 @@ export class AppController {
       closeBehavior,
       rememberChoice: true,
     });
+  }
+
+  loadPerformanceSettings() {
+    const settings = this.storageManager.getPerformanceSettings();
+    this.view.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
+    this.webViewManager.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
+  }
+
+  applyPerformanceSettings() {
+    const settings = this.storageManager.getPerformanceSettings();
+    this.webViewManager.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
+  }
+
+  setMaxWebViewPoolSize(maxWebViewPoolSize) {
+    const settings = this.storageManager.setPerformanceSettings({ maxWebViewPoolSize });
+    this.view.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
+    this.webViewManager.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
   }
 
   openAddSite() {
@@ -321,6 +340,7 @@ export class AppController {
 
     const wasActive = task.id === this.taskManager.activeTaskId;
     this.taskManager.remove(task.id);
+    this.webViewManager.removeTask(task.id);
     this.emitTasks();
 
     if (wasActive) {
@@ -416,6 +436,7 @@ export class AppController {
 
     await this.clearTaskData([task]);
     this.taskManager.remove(task.id);
+    this.webViewManager.removeTask(task.id);
     this.emitTasks();
     this.webViewManager.loadTask(this.taskManager.active());
     this.view.closeSettingsModal();

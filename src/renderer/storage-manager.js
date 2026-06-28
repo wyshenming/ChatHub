@@ -32,6 +32,26 @@ export class StorageManager {
     return this.systemApi.setCloseSettings(settings);
   }
 
+  getPerformanceSettings() {
+    const stored = this.readJson("chathub.performanceSettings.v1") || {};
+    return {
+      maxWebViewPoolSize: this.normalizeMaxWebViewPoolSize(stored.maxWebViewPoolSize),
+    };
+  }
+
+  setPerformanceSettings(settings) {
+    const nextSettings = {
+      maxWebViewPoolSize: this.normalizeMaxWebViewPoolSize(settings?.maxWebViewPoolSize),
+    };
+    this.writeJson("chathub.performanceSettings.v1", nextSettings);
+    return nextSettings;
+  }
+
+  normalizeMaxWebViewPoolSize(value) {
+    const parsed = Number(value);
+    return [2, 3, 4, 5, 6].includes(parsed) ? parsed : 4;
+  }
+
   async clearServiceData(targets) {
     return this.systemApi.clearServiceData(targets);
   }

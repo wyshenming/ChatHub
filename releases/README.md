@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v0.5.1
+当前版本：v0.6.0
 
 当前安装包：
 
@@ -19,6 +19,11 @@ ChatHub-Setup-x64.exe
 - Electron + WebView 桌面版 ChatHub。
 - 内置 ChatGPT、Gemini、DeepSeek。
 - 支持添加自定义 AI 网页。
+- WebView 缓存池支持按任务复用页面实例，减少任务切换时的重复加载。
+- 设置中可配置 WebView 最大常驻数量，在切换速度和内存占用之间取舍。
+- WebView 性能日志写入滚动日志文件，避免日志无限增长。
+- 卸载程序会先退出 ChatHub 和 Electron 子进程，再清理安装目录。
+- 卸载向导新增“删除用户数据”复选框，默认保留登录状态、设置、任务和日志。
 - 顶部快捷刷新当前网页。
 - 自定义网页支持顶部快捷删除。
 - 设置中新增关于窗口，展示版本、作者和 GitHub 仓库信息。
@@ -37,7 +42,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.5.1
+Current version: v0.6.0
 
 Current installer:
 
@@ -54,6 +59,11 @@ ChatHub-Setup-x64.exe
 - Electron + WebView desktop ChatHub.
 - Built-in ChatGPT, Gemini, and DeepSeek entries.
 - Custom AI web page support.
+- WebView pool support reuses page instances per task to reduce reloads when switching tasks.
+- Configurable maximum WebView pool size balances faster switching with memory usage.
+- WebView performance logs now use rolling log files to prevent unbounded growth.
+- The uninstaller exits ChatHub and Electron child processes before cleaning the install directory.
+- The uninstall wizard now includes a "delete user data" checkbox, with login state, settings, tasks, and logs kept by default.
 - Quick refresh for the current page in the top bar.
 - Quick delete for custom pages in the top bar.
 - About dialog in settings with version, author, and GitHub repository information.
