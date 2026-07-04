@@ -27,8 +27,10 @@ const aboutAuthor = document.querySelector("#about-author");
 const aboutRepository = document.querySelector("#about-repository");
 const addSiteModal = document.querySelector("#add-site-modal");
 const addSiteForm = document.querySelector("#add-site-form");
+const addSiteTitle = document.querySelector("#add-site-title");
 const closeAddSiteButton = document.querySelector("#close-add-site");
 const cancelAddSiteButton = document.querySelector("#cancel-add-site");
+const submitAddSiteButton = document.querySelector("#submit-add-site");
 const siteNameInput = document.querySelector("#site-name");
 const siteUrlInput = document.querySelector("#site-url");
 const formError = document.querySelector("#form-error");
@@ -44,6 +46,7 @@ let controller = null;
 let contextMenu = null;
 let textPromptResolve = null;
 let sidebarCollapsed = false;
+let editingSiteTaskId = null;
 
 function closeContextMenu() {
   contextMenu?.remove();
@@ -241,8 +244,8 @@ const view = {
                 action: () => controller.addTaskToNewGroup(task.id),
               },
               {
-                label: "\u91cd\u547d\u540d\u4efb\u52a1",
-                action: () => controller.renameTask(task.id),
+                label: "\u4fee\u6539\u7f51\u9875",
+                action: () => controller.editTaskSite(task.id),
               },
               {
                 label: "\u91cd\u65b0\u52a0\u8f7d\u9875\u9762",
@@ -307,6 +310,9 @@ const view = {
   },
 
   openAddSiteModal() {
+    editingSiteTaskId = null;
+    addSiteTitle.textContent = "\u6dfb\u52a0\u81ea\u5b9a\u4e49\u7f51\u9875";
+    submitAddSiteButton.textContent = "\u6dfb\u52a0";
     formError.textContent = "";
     addSiteForm.reset();
     document.body.classList.add("modal-open");
@@ -318,8 +324,25 @@ const view = {
     }, 0);
   },
 
+  openEditSiteModal(task) {
+    editingSiteTaskId = task.id;
+    addSiteTitle.textContent = "\u4fee\u6539\u7f51\u9875";
+    submitAddSiteButton.textContent = "\u4fdd\u5b58";
+    formError.textContent = "";
+    siteNameInput.value = task.title || task.name || "";
+    siteUrlInput.value = task.url || task.initialUrl || "";
+    document.body.classList.add("modal-open");
+    addSiteModal.hidden = false;
+
+    window.setTimeout(() => {
+      siteNameInput.focus();
+      siteNameInput.select();
+    }, 0);
+  },
+
   closeAddSiteModal() {
     addSiteModal.hidden = true;
+    editingSiteTaskId = null;
     if (settingsModal.hidden && aboutModal.hidden && textPromptModal.hidden) {
       document.body.classList.remove("modal-open");
     }
@@ -493,6 +516,14 @@ addSiteModal.addEventListener("click", (event) => {
 
 addSiteForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (editingSiteTaskId) {
+    controller.submitTaskSiteEdit(editingSiteTaskId, {
+      name: siteNameInput.value,
+      url: siteUrlInput.value,
+    });
+    return;
+  }
+
   controller.submitCustomSite({
     name: siteNameInput.value,
     url: siteUrlInput.value,

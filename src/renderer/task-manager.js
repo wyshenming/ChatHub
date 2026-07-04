@@ -306,6 +306,47 @@ export class TaskManager {
     this.update(taskId, { title: trimmedTitle, name: trimmedTitle });
   }
 
+  updateTaskSite(taskId, { title, url }) {
+    const task = this.get(taskId);
+    if (!task) {
+      throw new Error(text.addFailed);
+    }
+
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      throw new Error(text.nameRequired);
+    }
+
+    if (
+      this.all().some(
+        (item) => item.id !== taskId && item.title.toLowerCase() === trimmedTitle.toLowerCase()
+      )
+    ) {
+      throw new Error(text.duplicateName);
+    }
+
+    const urlChanged = task.url !== url;
+    this.update(taskId, {
+      title: trimmedTitle,
+      name: trimmedTitle,
+      url,
+      initialUrl: url,
+      origin: originFromUrl(url),
+      ...(urlChanged
+        ? {
+            inputDraft: "",
+            messages: [],
+            scroll: { x: 0, y: 0 },
+          }
+        : {}),
+    });
+
+    return {
+      task: this.get(taskId),
+      urlChanged,
+    };
+  }
+
   renameGroup(groupId, name) {
     const trimmedName = name.trim();
     if (!trimmedName) {

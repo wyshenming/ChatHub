@@ -1021,3 +1021,49 @@
 - 待提交到 GitHub。
 - 待创建 tag `v0.6.5`。
 - 待创建 GitHub Release `v0.6.5` 并上传安装包。
+
+## 2026-07-04 右键修改网页
+
+### 本轮已经完成
+
+- 将任务右键菜单中的“重命名任务”替换为“修改网页”。
+- 复用原“添加网页”弹窗，支持同时修改任务名称和链接。
+- 修改链接后会释放该任务旧的 WebView 缓存实例，并在当前任务被修改时重新加载新链接。
+- 仅释放任务对应 WebView，不清理 cookies / localStorage / sessionStorage / IndexedDB，不影响登录状态。
+
+### 已经修改的文件
+
+- `src/renderer/index.html`
+- `src/renderer/renderer.js`
+- `src/renderer/controller.js`
+- `src/renderer/task-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check src\renderer\renderer.js` 通过。
+- `node --check src\renderer\controller.js` 通过。
+- `node --check src\renderer\task-manager.js` 通过。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- `npm run dist:dir` 通过。
+- 待人工验证：右键任务选择“修改网页”，确认名称和链接都能保存。
+
+## 2026-07-04 发布 v0.6.6
+
+### 本轮已经完成
+
+- 按用户要求将版本号升级到 `0.6.6`。
+- 将“右键修改网页”维护修复纳入本版发布。
+- 清理并重写 `releases/README.md` 为正常 UTF-8 中英双语发布说明。
+
+### 待完成发布步骤
+
+- 已验证：`npm run dist` 完整打包通过。
+- 已验证：`dist\ChatHub.exe` 元数据显示 `FileVersion=0.6.6`、`ProductVersion=0.6.6`。
+- 已完成：安装包复制到 `releases/ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`9DE33EA66FD575E7F7D4DC9DF1AB51636434050D6920C4C678BA7E0B6FBDD3DA`。
+- 待提交到 GitHub。
+- 待创建 tag `v0.6.6`。
+- 待创建 GitHub Release `v0.6.6` 并上传安装包。

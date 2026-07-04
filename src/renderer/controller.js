@@ -325,6 +325,56 @@ export class AppController {
     }
   }
 
+  editTaskSite(taskId) {
+    const task = this.taskManager.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    this.view.openEditSiteModal(task);
+    this.webViewManager.blur();
+  }
+
+  async submitTaskSiteEdit(taskId, { name, url }) {
+    const task = this.taskManager.get(taskId);
+    if (!task) {
+      return;
+    }
+
+    this.view.setFormError("");
+
+    try {
+      const trimmedName = name.trim();
+      const normalizedUrl = normalizeUrl(url);
+
+      if (!trimmedName) {
+        throw new Error(text.nameRequired);
+      }
+
+      if (task.id === this.taskManager.activeTaskId) {
+        await this.persistCurrentTaskAsPaused();
+      }
+
+      const { task: updatedTask, urlChanged } = this.taskManager.updateTaskSite(taskId, {
+        title: trimmedName,
+        url: normalizedUrl,
+      });
+
+      if (urlChanged) {
+        this.webViewManager.removeTask(taskId);
+        if (updatedTask.id === this.taskManager.activeTaskId) {
+          this.webViewManager.loadTask(updatedTask);
+        }
+      }
+
+      this.emitTasks();
+      this.view.closeAddSiteModal();
+      this.view.setFormError("");
+    } catch (error) {
+      this.view.setFormError(error.message || text.addFailed);
+    }
+  }
+
   async deleteTask(taskId) {
     const task = this.taskManager.get(taskId);
     if (!task) {

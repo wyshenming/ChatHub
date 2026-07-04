@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v0.6.5
+当前版本：v0.6.6
 
 维护状态：ChatHub 已进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -12,30 +12,29 @@
 ChatHub-Setup-x64.exe
 ```
 
+### v0.6.6 维护修复
+
+- 任务右键菜单中的“重命名任务”已替换为“修改网页”，可同时修改名称和链接。
+- 修改链接时仅重建对应任务的 WebView，不清理 cookies、localStorage、sessionStorage 或 IndexedDB。
+
 ### 适用平台
 
 - Windows x64
 
-### 本版本包含
+### 主要能力
 
 - Electron + WebView 桌面版 ChatHub。
 - 内置 ChatGPT、Gemini、DeepSeek。
-- 支持添加自定义 AI 网页。
+- 支持添加和编辑自定义 AI 网页。
 - 侧边栏支持折叠为窄栏，并保留任务首字母 / 首字符徽标和设置入口。
-- WebView 缓存池支持按任务复用页面实例，减少任务切换时的重复加载。
-- 设置中可配置 WebView 最大常驻数量，在切换速度和内存占用之间取舍。
+- WebView 缓存池按任务复用页面实例，减少任务切换时的重复加载。
+- 设置中可配置 WebView 最大常驻数量。
 - WebView 性能日志写入滚动日志文件，避免日志无限增长。
 - 卸载程序会先退出 ChatHub 和 Electron 子进程，再清理安装目录。
-- 卸载向导新增“删除用户数据”复选框，默认保留登录状态、设置、任务和日志。
-- 顶部快捷刷新当前网页。
-- 自定义网页支持顶部快捷删除。
-- 设置中新增关于窗口，展示版本、作者和 GitHub 仓库信息。
-- 可执行文件元数据写入作者：染泓如梦QAQ。
-- 设置中移除了手动“挂起当前任务”和“标记完成”，切换任务时仍会自动保存当前状态。
-- 左侧任务状态点改为基于任务名称生成的柔和固定颜色，刷新后颜色保持一致。
-- 应用图标、窗口图标、托盘/安装包图标和左上角品牌图标已统一更新。
-- 单实例运行机制：重复打开程序时会激活已有窗口，不会创建第二个应用窗口。
-- 本机保存网页登录状态，安装包不包含个人账号信息。
+- 卸载向导提供“删除用户数据”复选框，默认保留登录状态、设置、任务和日志。
+- 设置中提供关于窗口，展示版本、作者和 GitHub 仓库信息。
+- 单实例运行机制：重复打开程序时会激活已有窗口。
+- 网页登录状态保存在本机，安装包不包含个人账号信息。
 
 ### 安装说明
 
@@ -45,7 +44,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.6.5
+Current version: v0.6.6
 
 Maintenance status: ChatHub is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -55,6 +54,11 @@ Current installer:
 ChatHub-Setup-x64.exe
 ```
 
+### v0.6.6 Maintenance Fix
+
+- Replaced the task context menu "rename" action with "edit page" so the task name and URL can be changed together.
+- Changing a task URL only recreates that task's WebView instance and does not clear cookies, localStorage, sessionStorage, or IndexedDB.
+
 ### Platform
 
 - Windows x64
@@ -63,21 +67,15 @@ ChatHub-Setup-x64.exe
 
 - Electron + WebView desktop ChatHub.
 - Built-in ChatGPT, Gemini, and DeepSeek entries.
-- Custom AI web page support.
+- Custom AI web pages can be added and edited.
 - Collapsible sidebar with compact task initial badges and a settings entry.
 - WebView pool support reuses page instances per task to reduce reloads when switching tasks.
-- Configurable maximum WebView pool size balances faster switching with memory usage.
-- WebView performance logs now use rolling log files to prevent unbounded growth.
+- Configurable maximum WebView pool size.
+- WebView performance logs use rolling log files to prevent unbounded growth.
 - The uninstaller exits ChatHub and Electron child processes before cleaning the install directory.
-- The uninstall wizard now includes a "delete user data" checkbox, with login state, settings, tasks, and logs kept by default.
-- Quick refresh for the current page in the top bar.
-- Quick delete for custom pages in the top bar.
+- The uninstall wizard includes a "delete user data" checkbox, with login state, settings, tasks, and logs kept by default.
 - About dialog in settings with version, author, and GitHub repository information.
-- Executable metadata includes the author: 染泓如梦QAQ.
-- Manual pause/finish actions were removed from settings; switching tasks still saves the current state automatically.
-- Sidebar task indicators now use stable soft colors generated from task names, so colors remain consistent after refresh.
-- App, window, tray/installer, and sidebar brand icons were updated to the new ChatHub icon.
-- Single-instance behavior: launching the app again activates the existing window instead of creating a second app window.
+- Single-instance behavior: launching the app again activates the existing window.
 - Website login state is stored locally. The installer does not include personal account data.
 
 ### Installation
