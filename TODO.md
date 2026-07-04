@@ -280,6 +280,6 @@ npm run dist
 
 - 已完成：版本号升级到 `0.6.6`。
 - 已完成：完整打包并更新 `releases/ChatHub-Setup-x64.exe`。
-- 待完成：提交 GitHub 仓库。
-- 待完成：创建 tag `v0.6.6`。
-- 待完成：创建 GitHub Release `v0.6.6` 并上传安装包。
+- 已完成：提交 GitHub 仓库。
+- 已完成：创建 tag `v0.6.6`。
+- 已完成：创建 GitHub Release `v0.6.6` 并上传安装包。

@@ -1064,6 +1064,7 @@
 - 已验证：`dist\ChatHub.exe` 元数据显示 `FileVersion=0.6.6`、`ProductVersion=0.6.6`。
 - 已完成：安装包复制到 `releases/ChatHub-Setup-x64.exe`。
 - 新安装包 SHA256：`9DE33EA66FD575E7F7D4DC9DF1AB51636434050D6920C4C678BA7E0B6FBDD3DA`。
-- 待提交到 GitHub。
-- 待创建 tag `v0.6.6`。
-- 待创建 GitHub Release `v0.6.6` 并上传安装包。
+- 已提交到 GitHub。
+- 已创建 tag `v0.6.6`。
+- 已创建 GitHub Release `v0.6.6` 并上传安装包。
+- Release 地址：`https://github.com/wyshenming/ChatHub/releases/tag/v0.6.6`。
