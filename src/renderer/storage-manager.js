@@ -47,6 +47,21 @@ export class StorageManager {
     return nextSettings;
   }
 
+  getUiSettings() {
+    const stored = this.readJson("chathub.uiSettings.v1") || {};
+    return {
+      sidebarCollapsed: Boolean(stored.sidebarCollapsed),
+    };
+  }
+
+  setUiSettings(settings) {
+    const nextSettings = {
+      sidebarCollapsed: Boolean(settings?.sidebarCollapsed),
+    };
+    this.writeJson("chathub.uiSettings.v1", nextSettings);
+    return nextSettings;
+  }
+
   normalizeMaxWebViewPoolSize(value) {
     const parsed = Number(value);
     return [2, 3, 4, 5, 6].includes(parsed) ? parsed : 4;

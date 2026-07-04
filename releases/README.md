@@ -2,7 +2,9 @@
 
 ## 中文
 
-当前版本：v0.6.0
+当前版本：v0.6.5
+
+维护状态：ChatHub 已进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
 当前安装包：
 
@@ -19,6 +21,7 @@ ChatHub-Setup-x64.exe
 - Electron + WebView 桌面版 ChatHub。
 - 内置 ChatGPT、Gemini、DeepSeek。
 - 支持添加自定义 AI 网页。
+- 侧边栏支持折叠为窄栏，并保留任务首字母 / 首字符徽标和设置入口。
 - WebView 缓存池支持按任务复用页面实例，减少任务切换时的重复加载。
 - 设置中可配置 WebView 最大常驻数量，在切换速度和内存占用之间取舍。
 - WebView 性能日志写入滚动日志文件，避免日志无限增长。
@@ -42,7 +45,9 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.6.0
+Current version: v0.6.5
+
+Maintenance status: ChatHub is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
 Current installer:
 
@@ -59,6 +64,7 @@ ChatHub-Setup-x64.exe
 - Electron + WebView desktop ChatHub.
 - Built-in ChatGPT, Gemini, and DeepSeek entries.
 - Custom AI web page support.
+- Collapsible sidebar with compact task initial badges and a settings entry.
 - WebView pool support reuses page instances per task to reduce reloads when switching tasks.
 - Configurable maximum WebView pool size balances faster switching with memory usage.
 - WebView performance logs now use rolling log files to prevent unbounded growth.

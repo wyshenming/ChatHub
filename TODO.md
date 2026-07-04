@@ -242,6 +242,28 @@ npm run dist
 - 已完成：`dist/ChatHub.exe` 元数据显示 `FileVersion=0.6.0`、`ProductVersion=0.6.0`。
 - 已完成：静默安装 / 启动 / 卸载烟测通过。
 - 已完成：`releases/ChatHub-Setup-x64.exe` 已更新。
+- 已完成：提交 GitHub 仓库。
+- 已完成：创建 tag `v0.6.0`。
+- 已完成：创建 GitHub Release `v0.6.0` 并上传安装包。
+
+## 侧边栏折叠窄栏
+
+- 已完成：新增侧边栏折叠 / 展开按钮。
+- 已完成：折叠后只保留图标、任务首字母徽标、分组指示和设置齿轮。
+- 已完成：折叠状态保存到 `chathub.uiSettings.v1`。
+- 已完成：未修改 WebViewPool、TaskManager、任务分组和登录状态逻辑。
+- 已验证：`node --check` 和 `npm run dist:dir` 通过。
+- 待人工验证：折叠后任务切换、设置入口和重启恢复状态是否符合预期。
+- 已完成：窄栏任务入口从纯圆点改为任务名称首字母 / 首字符，提升辨识度。
+
+## v0.6.5 发布
+
+- 已完成：版本号升级到 `0.6.5`。
+- 已完成：README 和 releases README 增加稳定维护期说明。
+- 已完成：侧边栏折叠窄栏作为最后的体验打磨纳入本版。
+- 已完成：完整打包并验证。
+- 已完成：`dist/ChatHub.exe` 元数据显示 `FileVersion=0.6.5`、`ProductVersion=0.6.5`。
+- 已完成：静默安装 / 启动 / 卸载烟测通过。
 - 待完成：提交 GitHub 仓库。
-- 待完成：创建 tag `v0.6.0`。
-- 待完成：创建 GitHub Release `v0.6.0` 并上传安装包。
+- 待完成：创建 tag `v0.6.5`。
+- 待完成：创建 GitHub Release `v0.6.5` 并上传安装包。

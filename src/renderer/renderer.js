@@ -6,11 +6,13 @@ import { WebViewManager } from "./webview-manager.js";
 import { getSoftColor, statusLabel } from "./utils.js";
 
 const serviceList = document.querySelector("#service-list");
+const appShell = document.querySelector(".app-shell");
 const sidebar = document.querySelector(".sidebar");
 const webviewFrame = document.querySelector("#webview-frame");
 const title = document.querySelector("#current-title");
 const status = document.querySelector("#status");
 const reloadButton = document.querySelector("#reload-current");
+const toggleSidebarButton = document.querySelector("#toggle-sidebar");
 const openSettingsButton = document.querySelector("#open-settings");
 const settingsModal = document.querySelector("#settings-modal");
 const closeSettingsButton = document.querySelector("#close-settings");
@@ -41,6 +43,7 @@ const cancelTextPromptButton = document.querySelector("#cancel-text-prompt");
 let controller = null;
 let contextMenu = null;
 let textPromptResolve = null;
+let sidebarCollapsed = false;
 
 function closeContextMenu() {
   contextMenu?.remove();
@@ -100,6 +103,27 @@ function completeTextPrompt(value) {
   const resolve = textPromptResolve;
   textPromptResolve = null;
   resolve?.(value);
+}
+
+function getTaskInitial(value) {
+  const firstCharacter = Array.from(String(value || "").trim())[0] || "?";
+  return /[a-z]/i.test(firstCharacter) ? firstCharacter.toUpperCase() : firstCharacter;
+}
+
+function setSidebarCollapsed(collapsed, persist = true) {
+  sidebarCollapsed = Boolean(collapsed);
+  appShell.classList.toggle("sidebar-collapsed", sidebarCollapsed);
+  toggleSidebarButton.textContent = sidebarCollapsed ? ">" : "<";
+  toggleSidebarButton.setAttribute("aria-pressed", String(sidebarCollapsed));
+  toggleSidebarButton.setAttribute(
+    "aria-label",
+    sidebarCollapsed ? "\u5c55\u5f00\u4fa7\u8fb9\u680f" : "\u6298\u53e0\u4fa7\u8fb9\u680f"
+  );
+  toggleSidebarButton.title = sidebarCollapsed ? "\u5c55\u5f00\u4fa7\u8fb9\u680f" : "\u6298\u53e0\u4fa7\u8fb9\u680f";
+
+  if (persist) {
+    storageManager.setUiSettings({ sidebarCollapsed });
+  }
 }
 
 const view = {
@@ -253,6 +277,7 @@ const view = {
           const dot = document.createElement("span");
           dot.className = "service-dot";
           dot.style.background = getSoftColor(task.title || task.name || task.id);
+          dot.textContent = getTaskInitial(task.title || task.name || task.id);
 
           const copy = document.createElement("span");
           copy.className = "task-copy";
@@ -408,6 +433,10 @@ openSettingsButton.addEventListener("click", () => {
   controller.openSettings();
 });
 
+toggleSidebarButton.addEventListener("click", () => {
+  setSidebarCollapsed(!sidebarCollapsed);
+});
+
 closeSettingsButton.addEventListener("click", () => {
   controller.closeSettings();
 });
@@ -526,4 +555,5 @@ window.addEventListener("keydown", (event) => {
   }
 });
 
+setSidebarCollapsed(storageManager.getUiSettings().sidebarCollapsed, false);
 controller.start();

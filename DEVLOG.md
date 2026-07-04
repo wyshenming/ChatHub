@@ -933,3 +933,91 @@
 - 待提交到 GitHub。
 - 待创建 tag `v0.6.0`。
 - 待创建 GitHub Release `v0.6.0` 并上传安装包。
+
+## 2026-07-03 侧边栏折叠窄栏
+
+### 本轮已经完成
+
+- 在左侧品牌区新增侧边栏折叠 / 展开按钮。
+- 折叠后侧边栏变为窄栏，只保留品牌图标、分组展开指示、任务状态圆点和设置齿轮入口。
+- 展开后恢复原有侧边栏布局。
+- 新增 UI 设置持久化 `chathub.uiSettings.v1`，保存 `sidebarCollapsed`。
+- 仅通过 CSS class 切换布局，不修改 WebViewPool、TaskManager、分组、任务切换或登录状态逻辑。
+
+### 已经修改的文件
+
+- `src/renderer/index.html`
+- `src/renderer/styles.css`
+- `src/renderer/renderer.js`
+- `src/renderer/storage-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check src\renderer\renderer.js` 通过。
+- `node --check src\renderer\storage-manager.js` 通过。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- 首次 `npm run dist:dir` 因旧的 `dist\ChatHub.exe` 正在运行而无法覆盖。
+- 关闭残留 ChatHub 进程后，`npm run dist:dir` 通过。
+
+### 仍需人工验证
+
+- 打开应用后点击侧边栏按钮，确认折叠 / 展开状态视觉正常。
+- 折叠状态下确认任务圆点可点击切换，设置齿轮可打开设置。
+- 重启应用后确认侧边栏折叠状态能恢复。
+
+## 2026-07-03 窄栏任务徽标
+
+### 本轮已经完成
+
+- 折叠侧边栏时，任务入口从单纯圆点改为显示任务名称首字母 / 首字符。
+- 展开侧边栏时仍保持原有柔和圆点视觉，不显示字母。
+- 英文任务取首字母大写，中文任务取第一个字符。
+- 未修改任务状态、分组或 WebView 切换逻辑。
+
+### 验证结果
+
+- `node --check src\renderer\renderer.js` 通过。
+- `git diff --check` 通过，仅有 CRLF 提示。
+
+## 2026-07-04 发布 v0.6.5
+
+### 本轮已经完成
+
+- 按用户要求将版本号升级到 `0.6.5`。
+- 将侧边栏折叠窄栏和任务首字母徽标纳入本版发布。
+- README 和 `releases/README.md` 增加稳定维护期说明：
+  - 后续不再规划功能性扩展。
+  - 后续主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
+- 同步更新：
+  - `package.json`
+  - `package-lock.json`
+  - `src/preload.js`
+  - `README.md`
+  - `releases/README.md`
+
+### 版本重点
+
+- 侧边栏可折叠为窄栏。
+- 窄栏任务入口显示任务名称首字母 / 首字符。
+- 折叠状态持久化。
+- 明确项目进入稳定维护期。
+
+### 发布状态
+
+- `npm run dist` 完整打包通过。
+- 使用 `D:\codex\ChatHub_UninstallSmoke` 做静默安装 / 启动 / 静默卸载烟测：
+  - 安装退出码：`0`
+  - `FileVersion=0.6.5`
+  - `ProductVersion=0.6.5`
+  - 卸载退出码：`0`
+  - 卸载后测试安装目录存在：`False`
+  - 卸载后 ChatHub 进程数量：`0`
+  - `%APPDATA%\AI Chat Hub` 仍存在：`True`
+  - `%TEMP%\chathub-cleanup.vbs` 已自删：`False`
+- 新安装包 SHA256：`696AEDEB25F03BD5FF04A9B26CC507544D2D238B41D73EBDCC0CF99BAEAE914A`。
+- 待提交到 GitHub。
+- 待创建 tag `v0.6.5`。
+- 待创建 GitHub Release `v0.6.5` 并上传安装包。

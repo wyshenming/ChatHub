@@ -47,6 +47,11 @@ button {
   grid-template-columns: 248px minmax(0, 1fr);
   width: 100vw;
   height: 100vh;
+  transition: grid-template-columns 160ms ease;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 76px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -61,7 +66,7 @@ button {
 
 .brand {
   display: grid;
-  grid-template-columns: 42px 1fr;
+  grid-template-columns: 42px minmax(0, 1fr) 32px;
   gap: 12px;
   align-items: center;
 }
@@ -100,6 +105,25 @@ button {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.sidebar-toggle {
+  display: grid;
+  width: 32px;
+  min-height: 32px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sidebar-toggle:hover {
+  background: var(--panel-strong);
 }
 
 .service-list {
@@ -188,14 +212,23 @@ button {
 }
 
 .service-dot {
+  display: grid;
   width: 10px;
   height: 10px;
   flex: 0 0 auto;
+  place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 999px;
+  color: transparent;
+  font-size: 0;
+  font-weight: 900;
   box-shadow: 0 0 0 1px rgba(23, 32, 51, 0.08);
   transition:
+    color 160ms ease,
     filter 160ms ease,
+    font-size 160ms ease,
+    width 160ms ease,
+    height 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
 }
@@ -449,6 +482,72 @@ button {
   height: 100%;
 }
 
+.app-shell.sidebar-collapsed .sidebar {
+  gap: 16px;
+  padding: 14px 10px;
+}
+
+.app-shell.sidebar-collapsed .brand {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 8px;
+}
+
+.app-shell.sidebar-collapsed .brand-copy,
+.app-shell.sidebar-collapsed .task-copy,
+.app-shell.sidebar-collapsed .group-name,
+.app-shell.sidebar-collapsed .group-count {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .sidebar-toggle {
+  width: 42px;
+}
+
+.app-shell.sidebar-collapsed .service-list {
+  padding-right: 0;
+}
+
+.app-shell.sidebar-collapsed .service-button,
+.app-shell.sidebar-collapsed .group-button {
+  justify-content: center;
+  padding: 0;
+}
+
+.app-shell.sidebar-collapsed .service-button {
+  display: grid;
+  place-items: center;
+}
+
+.app-shell.sidebar-collapsed .group-button {
+  grid-template-columns: 1fr;
+  place-items: center;
+}
+
+.app-shell.sidebar-collapsed .service-dot {
+  width: 28px;
+  height: 28px;
+  color: #ffffff;
+  font-size: 13px;
+  text-shadow: 0 1px 2px rgba(23, 32, 51, 0.22);
+}
+
+.app-shell.sidebar-collapsed .sidebar-footer {
+  justify-items: center;
+}
+
+.app-shell.sidebar-collapsed .utility-button {
+  width: 42px;
+  padding: 0;
+  font-size: 0;
+}
+
+.app-shell.sidebar-collapsed .utility-button::before {
+  content: "\2699";
+  font-size: 18px;
+  line-height: 1;
+}
+
 body.modal-open .task-webview {
   pointer-events: none;
   visibility: hidden;
@@ -684,13 +783,31 @@ body.modal-open .task-webview {
     justify-items: center;
   }
 
-  .brand h1,
-  .brand p,
-  .service-button span:last-child,
+  .brand-copy,
+  .task-copy,
   .group-name,
-  .group-count,
-  .utility-button {
+  .group-count {
     display: none;
+  }
+
+  .sidebar-toggle {
+    width: 42px;
+  }
+
+  .sidebar-footer {
+    justify-items: center;
+  }
+
+  .utility-button {
+    width: 42px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .utility-button::before {
+    content: "\2699";
+    font-size: 18px;
+    line-height: 1;
   }
 
   .service-button,
