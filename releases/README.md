@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v0.6.6
+当前版本：v0.7.0
 
 维护状态：ChatHub 已进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -12,10 +12,12 @@
 ChatHub-Setup-x64.exe
 ```
 
-### v0.6.6 维护修复
+### v0.7.0 维护修复
 
-- 任务右键菜单中的“重命名任务”已替换为“修改网页”，可同时修改名称和链接。
-- 修改链接时仅重建对应任务的 WebView，不清理 cookies、localStorage、sessionStorage 或 IndexedDB。
+- 停用 ChatHub 自己的网页输入草稿采集和恢复逻辑。
+- 启动时一次性清理旧任务中的 `inputDraft`、`messages`、`scroll` 临时状态。
+- 保留 WebViewPool、任务切换、登录状态和站点持久化数据不变。
+- 已确认 SillyTavern 另有官方 `Restore User Input` 设置；若关闭后输入框不再恢复，说明该部分由 SillyTavern 自身控制。
 
 ### 适用平台
 
@@ -44,7 +46,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.6.6
+Current version: v0.7.0
 
 Maintenance status: ChatHub is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -54,10 +56,12 @@ Current installer:
 ChatHub-Setup-x64.exe
 ```
 
-### v0.6.6 Maintenance Fix
+### v0.7.0 Maintenance Fix
 
-- Replaced the task context menu "rename" action with "edit page" so the task name and URL can be changed together.
-- Changing a task URL only recreates that task's WebView instance and does not clear cookies, localStorage, sessionStorage, or IndexedDB.
+- Disabled ChatHub's own web input draft capture and restore logic.
+- Added a one-time startup migration to clear old task `inputDraft`, `messages`, and `scroll` transient state.
+- Kept WebViewPool, task switching, login state, and website persistent storage unchanged.
+- Confirmed SillyTavern has its own official `Restore User Input` setting; if disabling it stops the draft from returning, that behavior is controlled by SillyTavern itself.
 
 ### Platform
 

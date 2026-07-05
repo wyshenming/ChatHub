@@ -264,3 +264,21 @@
 **小米：** 发布说明需要突出“重命名”已替换为“修改网页”，同时说明修改链接不会清理登录状态。由于 `releases/README.md` 旧内容存在乱码，本轮将该发布说明重写为干净的 UTF-8 中英双语文档，避免后续交接继续被乱码干扰。
 
 **小米：** 发布仍遵守已有规则：完整打包、更新仓库内安装包副本、提交 GitHub、创建新的 `v0.6.6` tag 和 GitHub Release，不覆盖旧 Release。
+
+### 2026-07-05：输入草稿重复恢复问题
+
+**小米：** 用户反馈构建前网页输入框里留过文字，构建后无论刷新还是清理缓存，文字仍然会出现。先按要求只分析原因，确认这不是安装包携带文字，而是本机 `%APPDATA%\AI Chat Hub` 持久化状态被继续复用。
+
+**小米：** 代码里有两层恢复来源：ChatHub 自己会在切换 / 关闭时通过 WebView JS 抓取 `textarea / input / contenteditable` 写入 `inputDraft`，加载后又把 `inputDraft` 写回页面；同时各 AI 网站也可能用自己的 localStorage / IndexedDB 保存草稿。
+
+**小米：** “清理缓存（保留登录状态）”只调用 `session.clearCache()`，它不能也不应该清理 cookies、localStorage、sessionStorage、IndexedDB 或 ChatHub renderer localStorage，所以旧草稿不会因此消失。
+
+**小米：** 本轮修复选择最小风险路径：停用 ChatHub 自己的输入草稿采集和恢复，只保留任务切换、WebViewPool 和登录持久化；同时增加一次性任务临时状态迁移，清掉旧 `inputDraft/messages/scroll`。不触碰站点登录数据。
+
+### 2026-07-05：发布 v0.7.0 输入草稿修复版
+
+**小米：** 用户确认关闭 SillyTavern 官方 `Restore User Input` 后，酒馆输入框不再恢复，说明主要现象来自网页自身设置。虽然如此，ChatHub 自己的输入草稿恢复逻辑已经不再适合稳定维护期定位，应作为 bug 修复保留。
+
+**小米：** 本次版本号指定为 `0.7.0`，发布重点不是新增功能，而是去掉 ChatHub 自己对网页输入框的主动干预，降低和各网站原生草稿机制冲突的概率。
+
+**小米：** Release Notes 需要说明两个边界：ChatHub 不再保存 / 恢复网页输入草稿；SillyTavern 自身仍有 `Restore User Input`，这类站点级草稿由网页设置控制。

@@ -1,6 +1,7 @@
 export const TASKS_STORAGE_KEY = "chathub.tasks.v1";
 export const GROUPS_STORAGE_KEY = "chathub.groups.v1";
 export const APP_VERSION_STORAGE_KEY = "chathub.appVersion.v1";
+export const TASK_TRANSIENT_MIGRATION_STORAGE_KEY = "chathub.taskTransientMigration.v1";
 export const LEGACY_CUSTOM_SERVICES_KEY = "chathub.customServices.v1";
 export const RUNTIME_PARTITION = "persist:chathub-runtime";
 export const APP_NAME = "ChatHub";

@@ -11,7 +11,6 @@ export class WebViewManager {
     this.webview = null;
     this.webviewPool = new Map();
     this.maxWebViewPoolSize = 4;
-    this.restoreQueue = new Map();
 
     window.addEventListener("beforeunload", () => {
       this.logPoolDestroy("beforeunload");
@@ -163,10 +162,6 @@ export class WebViewManager {
     record.taskTitle = task.title || task.name || task.id;
     record.targetUrl = targetUrl;
     record.webview.dataset.taskId = task.id;
-    this.restoreQueue.set(task.id, {
-      inputDraft: task.inputDraft,
-      scroll: task.scroll,
-    });
 
     this.activateRecord(record);
     this.logSwitchStart(this.activeNavigation);
@@ -284,80 +279,17 @@ export class WebViewManager {
   async captureState() {
     const record = this.activeRecord();
     const url = this.safeGetUrl(record);
-    let inputDraft = "";
-    let scroll = { x: 0, y: 0 };
-
-    if (!record) {
-      return {
-        url,
-        inputDraft,
-        scroll,
-        messages: [],
-      };
-    }
-
-    try {
-      const state = await record.webview.executeJavaScript(
-        `(() => {
-          const active = document.activeElement;
-          const editable = active && (active.matches?.("textarea, input[type='text'], input:not([type]), [contenteditable='true']"));
-          const target = editable ? active : document.querySelector("textarea, [contenteditable='true'], input[type='text']");
-          return {
-            inputDraft: target ? (target.value ?? target.innerText ?? "") : "",
-            scroll: { x: window.scrollX || 0, y: window.scrollY || 0 }
-          };
-        })();`,
-        true
-      );
-      inputDraft = state?.inputDraft || "";
-      scroll = state?.scroll || scroll;
-    } catch {
-      inputDraft = "";
-    }
 
     return {
       url,
-      inputDraft,
-      scroll,
+      inputDraft: "",
+      scroll: { x: 0, y: 0 },
       messages: [],
     };
   }
 
   async restoreTaskContext(taskId = this.currentTaskId) {
-    const record = this.webviewPool.get(taskId);
-    const queued = this.restoreQueue.get(taskId);
-    if (!record || !queued) {
-      return;
-    }
-
-    this.restoreQueue.delete(taskId);
-
-    try {
-      await record.webview.executeJavaScript(
-        `(() => {
-          const draft = ${JSON.stringify(queued.inputDraft || "")};
-          const scroll = ${JSON.stringify(queued.scroll || { x: 0, y: 0 })};
-          const target = document.querySelector("textarea, [contenteditable='true'], input[type='text']");
-          if (draft && target) {
-            const current = target.value ?? target.innerText ?? "";
-            if (!current.trim()) {
-              if ("value" in target) {
-                target.value = draft;
-                target.dispatchEvent(new Event("input", { bubbles: true }));
-              } else {
-                target.innerText = draft;
-                target.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: draft }));
-              }
-            }
-          }
-          window.scrollTo(scroll.x || 0, scroll.y || 0);
-          return true;
-        })();`,
-        true
-      );
-    } catch {
-      // Cross-site restoration is best-effort.
-    }
+    return Boolean(this.webviewPool.get(taskId));
   }
 
   reload() {

@@ -3,6 +3,7 @@ import {
   DEFAULT_GROUP_ID,
   GROUPS_STORAGE_KEY,
   LEGACY_CUSTOM_SERVICES_KEY,
+  TASK_TRANSIENT_MIGRATION_STORAGE_KEY,
   TASKS_STORAGE_KEY,
   TaskStatus,
   defaultTaskSeeds,
@@ -33,9 +34,9 @@ export function createTask(seed) {
     hidden: Boolean(hidden),
     visible: !hidden,
     status: seed.status || TaskStatus.PAUSED,
-    messages: Array.isArray(seed.messages) ? seed.messages : [],
-    inputDraft: seed.inputDraft || "",
-    scroll: seed.scroll || { x: 0, y: 0 },
+    messages: [],
+    inputDraft: "",
+    scroll: { x: 0, y: 0 },
     createdAt: seed.createdAt || timestamp,
     updatedAt: seed.updatedAt || timestamp,
   };
@@ -71,6 +72,7 @@ export class TaskManager {
     this.tasks = this.loadTasks();
     this.groups = this.loadGroups();
     this.migrateForAppVersion(window.aiChatHub?.version || "unknown");
+    this.migrateTransientTaskState();
     this.normalizeTaskGroups();
     this.activeTaskId = this.all()[0]?.id;
   }
@@ -141,6 +143,29 @@ export class TaskManager {
     }));
     this.persist();
     this.storageManager.writeString(APP_VERSION_STORAGE_KEY, currentVersion);
+  }
+
+  migrateTransientTaskState() {
+    const migrationVersion = "disable-input-draft-restore-v1";
+    const savedVersion = this.storageManager.readString(TASK_TRANSIENT_MIGRATION_STORAGE_KEY);
+
+    if (savedVersion === migrationVersion) {
+      return;
+    }
+
+    this.clearTransientTaskState();
+    this.storageManager.writeString(TASK_TRANSIENT_MIGRATION_STORAGE_KEY, migrationVersion);
+  }
+
+  clearTransientTaskState() {
+    this.tasks = this.tasks.map((task) => ({
+      ...task,
+      inputDraft: "",
+      messages: [],
+      scroll: { x: 0, y: 0 },
+      updatedAt: now(),
+    }));
+    this.persist();
   }
 
   loadGroups() {
@@ -440,9 +465,9 @@ export class TaskManager {
     this.update(taskId, {
       url,
       origin: originFromUrl(url) || task.origin,
-      inputDraft: snapshot.inputDraft || task.inputDraft || "",
-      messages: Array.isArray(snapshot.messages) ? snapshot.messages : task.messages,
-      scroll: snapshot.scroll || task.scroll || { x: 0, y: 0 },
+      inputDraft: "",
+      messages: [],
+      scroll: { x: 0, y: 0 },
       status: task.status === TaskStatus.FINISHED ? TaskStatus.FINISHED : TaskStatus.PAUSED,
     });
   }

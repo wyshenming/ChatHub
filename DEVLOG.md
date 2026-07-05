@@ -1068,3 +1068,56 @@
 - 已创建 tag `v0.6.6`。
 - 已创建 GitHub Release `v0.6.6` 并上传安装包。
 - Release 地址：`https://github.com/wyshenming/ChatHub/releases/tag/v0.6.6`。
+
+## 2026-07-05 输入草稿重复恢复排查与修复
+
+### 问题原因
+
+- ChatHub 会在任务切换 / 关闭前通过 WebView JS 抓取网页 `textarea / input / contenteditable` 内容，保存为任务 `inputDraft`。
+- 页面重新加载后，WebViewManager 会把保存的 `inputDraft` 再写回网页输入框。
+- 构建前如果输入框里有文字，该文字可能已保存到本机 `%APPDATA%\AI Chat Hub` 的任务状态中；构建后的 exe 继续使用同一用户数据目录，因此刷新页面仍会恢复该文字。
+- “清理缓存（保留登录状态）”只调用 Electron session `clearCache()`，不会清理 ChatHub 自己的任务状态，也不会清理站点 localStorage / IndexedDB，因此无法移除该草稿。
+
+### 本轮已经完成
+
+- 停止从网页输入框采集 `inputDraft`。
+- 停止向网页输入框恢复 `inputDraft`。
+- 保留任务切换、WebViewPool、登录状态和站点持久化分区不变。
+- 新增一次性任务临时状态迁移，清理旧的 `inputDraft`、`messages`、`scroll`。
+
+### 已经修改的文件
+
+- `src/renderer/constants.js`
+- `src/renderer/task-manager.js`
+- `src/renderer/webview-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check src\renderer\constants.js` 通过。
+- `node --check src\renderer\task-manager.js` 通过。
+- `node --check src\renderer\webview-manager.js` 通过。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- `npm run dist:dir` 通过。
+- 启动应用后确认旧输入草稿不再自动出现在网页输入框里。
+- 确认登录状态不受影响。
+
+## 2026-07-05 发布 v0.7.0
+
+### 本轮已经完成
+
+- 按用户要求将版本号升级到 `0.7.0`。
+- 将输入草稿恢复修复纳入本版发布。
+- 更新 `releases/README.md`，说明 ChatHub 已停用自身输入草稿恢复，同时记录 SillyTavern `Restore User Input` 设置结论。
+
+### 待完成发布步骤
+
+- 已验证：`npm run dist` 完整打包通过。
+- 已验证：`dist\ChatHub.exe` 元数据显示 `FileVersion=0.7.0`、`ProductVersion=0.7.0`。
+- 已完成：安装包复制到 `releases/ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`566B258BEF56E3648DC895B98ACCD6995B9B7B8D5A973F204EEBA14D60120C17`。
+- 待完成：提交 GitHub 仓库。
+- 待完成：创建 tag `v0.7.0`。
+- 待完成：创建 GitHub Release `v0.7.0` 并上传安装包。
