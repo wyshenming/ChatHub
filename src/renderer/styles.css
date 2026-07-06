@@ -126,6 +126,21 @@ button {
   background: var(--panel-strong);
 }
 
+.button-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.button-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .service-list {
   display: grid;
   flex: 1 1 auto;
@@ -157,6 +172,11 @@ button {
   display: flex;
   align-items: center;
   width: 100%;
+}
+
+.utility-button {
+  justify-content: center;
+  gap: 8px;
 }
 
 .service-button {
@@ -272,14 +292,11 @@ button {
 }
 
 .group-indicator {
-  display: grid;
+  display: block;
   width: 18px;
   height: 18px;
-  place-items: center;
-  color: #8a96a8;
-  font-size: 10px;
-  font-weight: 900;
-  line-height: 1;
+  object-fit: contain;
+  opacity: 0.72;
 }
 
 .group-name,
@@ -454,6 +471,81 @@ button {
   font-weight: 700;
 }
 
+.quick-action-button.icon-only {
+  display: inline-grid;
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  place-items: center;
+}
+
+.zoom-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.zoom-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 218px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(23, 32, 51, 0.16);
+}
+
+.zoom-popover[hidden] {
+  display: none;
+}
+
+.zoom-value {
+  min-width: 50px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.zoom-step-button,
+.zoom-reset-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #ffffff;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.zoom-step-button {
+  width: 32px;
+}
+
+.zoom-reset-button {
+  min-width: 70px;
+  padding: 0 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.zoom-step-button:hover,
+.zoom-reset-button:hover,
+.quick-action-button:hover {
+  border-color: #b9c5d8;
+  background: #f7f9fc;
+}
+
 .quick-action-button.danger {
   border-color: #ffd4d4;
   color: var(--danger);
@@ -496,7 +588,8 @@ button {
 .app-shell.sidebar-collapsed .brand-copy,
 .app-shell.sidebar-collapsed .task-copy,
 .app-shell.sidebar-collapsed .group-name,
-.app-shell.sidebar-collapsed .group-count {
+.app-shell.sidebar-collapsed .group-count,
+.app-shell.sidebar-collapsed .button-label {
   display: none;
 }
 
@@ -539,13 +632,7 @@ button {
 .app-shell.sidebar-collapsed .utility-button {
   width: 42px;
   padding: 0;
-  font-size: 0;
-}
-
-.app-shell.sidebar-collapsed .utility-button::before {
-  content: "\2699";
-  font-size: 18px;
-  line-height: 1;
+  justify-content: center;
 }
 
 body.modal-open .task-webview {
@@ -786,7 +873,8 @@ body.modal-open .task-webview {
   .brand-copy,
   .task-copy,
   .group-name,
-  .group-count {
+  .group-count,
+  .button-label {
     display: none;
   }
 
@@ -801,13 +889,7 @@ body.modal-open .task-webview {
   .utility-button {
     width: 42px;
     padding: 0;
-    font-size: 0;
-  }
-
-  .utility-button::before {
-    content: "\2699";
-    font-size: 18px;
-    line-height: 1;
+    justify-content: center;
   }
 
   .service-button,

@@ -15,13 +15,18 @@
             <h1>ChatHub</h1>
             <p>AI &#32593;&#39029;&#24037;&#20316;&#21488;</p>
           </div>
-          <button class="sidebar-toggle" type="button" id="toggle-sidebar" title="&#25240;&#21472;&#20391;&#36793;&#26639;" aria-label="&#25240;&#21472;&#20391;&#36793;&#26639;" aria-pressed="false">&lt;</button>
+          <button class="sidebar-toggle" type="button" id="toggle-sidebar" title="&#25240;&#21472;&#20391;&#36793;&#26639;" aria-label="&#25240;&#21472;&#20391;&#36793;&#26639;" aria-pressed="false">
+            <img class="button-icon" id="sidebar-toggle-icon" src="./assets/icons/sidebar-collapse.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
 
         <nav class="service-list" id="service-list" aria-label="&#20999;&#25442;&#20219;&#21153;"></nav>
 
         <div class="sidebar-footer">
-          <button class="utility-button primary" type="button" id="open-settings">&#35774;&#32622;</button>
+          <button class="utility-button primary" type="button" id="open-settings">
+            <img class="button-icon" src="./assets/icons/settings.svg" alt="" aria-hidden="true" />
+            <span class="button-label">&#35774;&#32622;</span>
+          </button>
         </div>
       </aside>
 
@@ -33,7 +38,27 @@
           </div>
           <div class="topbar-actions">
             <div class="status" id="status">&#27491;&#22312;&#21152;&#36733;</div>
-            <button class="quick-action-button" type="button" id="reload-current" title="&#21047;&#26032;&#24403;&#21069;&#39029;" aria-label="&#21047;&#26032;&#24403;&#21069;&#39029;">&#21047;&#26032;</button>
+            <div class="zoom-control">
+              <button class="quick-action-button icon-only zoom-toggle" type="button" id="open-zoom" title="&#39029;&#38754;&#32553;&#25918;" aria-label="&#39029;&#38754;&#32553;&#25918;" aria-expanded="false">
+                <img class="button-icon" src="./assets/icons/zoom-in.svg" alt="" aria-hidden="true" />
+              </button>
+              <div class="zoom-popover" id="zoom-popover" hidden>
+                <button class="zoom-step-button" type="button" id="zoom-out" aria-label="&#32553;&#23567;">
+                  <img class="button-icon" src="./assets/icons/minus.svg" alt="" aria-hidden="true" />
+                </button>
+                <span class="zoom-value" id="zoom-value">100%</span>
+                <button class="zoom-step-button" type="button" id="zoom-in" aria-label="&#25918;&#22823;">
+                  <img class="button-icon" src="./assets/icons/plus.svg" alt="" aria-hidden="true" />
+                </button>
+                <button class="zoom-reset-button" type="button" id="zoom-reset">
+                  <img class="button-icon" src="./assets/icons/reset.svg" alt="" aria-hidden="true" />
+                  <span>&#37325;&#32622;</span>
+                </button>
+              </div>
+            </div>
+            <button class="quick-action-button icon-only" type="button" id="reload-current" title="&#21047;&#26032;&#24403;&#21069;&#39029;" aria-label="&#21047;&#26032;&#24403;&#21069;&#39029;">
+              <img class="button-icon" src="./assets/icons/refresh.svg" alt="" aria-hidden="true" />
+            </button>
           </div>
         </header>
 
@@ -45,7 +70,9 @@
       <section class="modal settings-modal" aria-labelledby="settings-title">
         <div class="modal-header">
           <h3 id="settings-title">&#35774;&#32622;</h3>
-          <button class="icon-button" type="button" id="close-settings" aria-label="&#20851;&#38381;">x</button>
+          <button class="icon-button" type="button" id="close-settings" aria-label="&#20851;&#38381;">
+            <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
 
         <div class="settings-group">
@@ -81,7 +108,10 @@
 
         <div class="settings-group">
           <div class="settings-label">&#20851;&#20110;</div>
-          <button class="utility-button" type="button" id="open-about">&#20851;&#20110; ChatHub</button>
+          <button class="utility-button" type="button" id="open-about">
+            <img class="button-icon" src="./assets/icons/info.svg" alt="" aria-hidden="true" />
+            <span class="button-label">&#20851;&#20110; ChatHub</span>
+          </button>
         </div>
       </section>
     </div>
@@ -90,7 +120,9 @@
       <section class="modal about-modal" aria-labelledby="about-title">
         <div class="modal-header">
           <h3 id="about-title">&#20851;&#20110; ChatHub</h3>
-          <button class="icon-button" type="button" id="close-about" aria-label="&#20851;&#38381;">x</button>
+          <button class="icon-button" type="button" id="close-about" aria-label="&#20851;&#38381;">
+            <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
 
         <div class="about-brand">
@@ -117,7 +149,10 @@
         </dl>
 
         <div class="modal-actions single">
-          <button class="utility-button primary" type="button" id="open-repository">GitHub &#20179;&#24211;</button>
+          <button class="utility-button primary" type="button" id="open-repository">
+            <img class="button-icon" src="./assets/icons/github.svg" alt="" aria-hidden="true" />
+            <span class="button-label">GitHub &#20179;&#24211;</span>
+          </button>
         </div>
       </section>
     </div>
@@ -126,7 +161,9 @@
       <form class="modal" id="add-site-form">
         <div class="modal-header">
           <h3 id="add-site-title">&#28155;&#21152;&#33258;&#23450;&#20041;&#32593;&#39029;</h3>
-          <button class="icon-button" type="button" id="close-add-site" aria-label="&#20851;&#38381;">x</button>
+          <button class="icon-button" type="button" id="close-add-site" aria-label="&#20851;&#38381;">
+            <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
 
         <label class="field">
@@ -152,7 +189,9 @@
       <form class="modal" id="text-prompt-form">
         <div class="modal-header">
           <h3 id="text-prompt-title">&#36755;&#20837;&#21517;&#31216;</h3>
-          <button class="icon-button" type="button" id="close-text-prompt" aria-label="&#20851;&#38381;">x</button>
+          <button class="icon-button" type="button" id="close-text-prompt" aria-label="&#20851;&#38381;">
+            <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
 
         <label class="field">

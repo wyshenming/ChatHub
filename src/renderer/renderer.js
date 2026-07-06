@@ -1,5 +1,5 @@
 import { AppController } from "./controller.js";
-import { APP_AUTHOR, APP_REPOSITORY_URL, DEFAULT_GROUP_ID } from "./constants.js";
+import { APP_AUTHOR, APP_REPOSITORY_URL, DEFAULT_GROUP_ID, DEFAULT_ZOOM_PERCENT, ZOOM_LEVELS } from "./constants.js";
 import { StorageManager } from "./storage-manager.js";
 import { TaskManager } from "./task-manager.js";
 import { WebViewManager } from "./webview-manager.js";
@@ -12,7 +12,14 @@ const webviewFrame = document.querySelector("#webview-frame");
 const title = document.querySelector("#current-title");
 const status = document.querySelector("#status");
 const reloadButton = document.querySelector("#reload-current");
+const openZoomButton = document.querySelector("#open-zoom");
+const zoomPopover = document.querySelector("#zoom-popover");
+const zoomOutButton = document.querySelector("#zoom-out");
+const zoomInButton = document.querySelector("#zoom-in");
+const zoomResetButton = document.querySelector("#zoom-reset");
+const zoomValue = document.querySelector("#zoom-value");
 const toggleSidebarButton = document.querySelector("#toggle-sidebar");
+const sidebarToggleIcon = document.querySelector("#sidebar-toggle-icon");
 const openSettingsButton = document.querySelector("#open-settings");
 const settingsModal = document.querySelector("#settings-modal");
 const closeSettingsButton = document.querySelector("#close-settings");
@@ -47,10 +54,31 @@ let contextMenu = null;
 let textPromptResolve = null;
 let sidebarCollapsed = false;
 let editingSiteTaskId = null;
+let currentZoomPercent = DEFAULT_ZOOM_PERCENT;
 
 function closeContextMenu() {
   contextMenu?.remove();
   contextMenu = null;
+}
+
+function closeZoomPopover() {
+  zoomPopover.hidden = true;
+  openZoomButton.setAttribute("aria-expanded", "false");
+}
+
+function toggleZoomPopover() {
+  zoomPopover.hidden = !zoomPopover.hidden;
+  openZoomButton.setAttribute("aria-expanded", String(!zoomPopover.hidden));
+}
+
+function updateZoomControls(zoomPercent) {
+  currentZoomPercent = zoomPercent || DEFAULT_ZOOM_PERCENT;
+  zoomValue.textContent = `${currentZoomPercent}%`;
+  const currentIndex = ZOOM_LEVELS.indexOf(currentZoomPercent);
+  const safeIndex = currentIndex >= 0 ? currentIndex : ZOOM_LEVELS.indexOf(DEFAULT_ZOOM_PERCENT);
+  zoomOutButton.disabled = safeIndex <= 0;
+  zoomInButton.disabled = safeIndex >= ZOOM_LEVELS.length - 1;
+  zoomResetButton.disabled = currentZoomPercent === DEFAULT_ZOOM_PERCENT;
 }
 
 function addContextMenuItem(menu, label, action, danger = false) {
@@ -116,7 +144,7 @@ function getTaskInitial(value) {
 function setSidebarCollapsed(collapsed, persist = true) {
   sidebarCollapsed = Boolean(collapsed);
   appShell.classList.toggle("sidebar-collapsed", sidebarCollapsed);
-  toggleSidebarButton.textContent = sidebarCollapsed ? ">" : "<";
+  sidebarToggleIcon.src = sidebarCollapsed ? "./assets/icons/sidebar-expand.svg" : "./assets/icons/sidebar-collapse.svg";
   toggleSidebarButton.setAttribute("aria-pressed", String(sidebarCollapsed));
   toggleSidebarButton.setAttribute(
     "aria-label",
@@ -202,9 +230,11 @@ const view = {
         openContextMenu(event, items);
       });
 
-      const indicator = document.createElement("span");
+      const indicator = document.createElement("img");
       indicator.className = "group-indicator";
-      indicator.textContent = group.collapsed ? "\u25b6" : "\u25be";
+      indicator.src = group.collapsed ? "./assets/icons/group-expand.svg" : "./assets/icons/group-collapse.svg";
+      indicator.alt = "";
+      indicator.setAttribute("aria-hidden", "true");
 
       const name = document.createElement("span");
       name.className = "group-name";
@@ -306,7 +336,12 @@ const view = {
 
     if (activeTask) {
       title.textContent = activeTask.title;
+      this.setZoomPercent(activeTask.zoomPercent || DEFAULT_ZOOM_PERCENT);
     }
+  },
+
+  setZoomPercent(zoomPercent) {
+    updateZoomControls(zoomPercent);
   },
 
   openAddSiteModal() {
@@ -452,6 +487,27 @@ reloadButton.addEventListener("click", () => {
   controller.reloadCurrent();
 });
 
+openZoomButton.addEventListener("click", (event) => {
+  event.stopPropagation();
+  toggleZoomPopover();
+});
+
+zoomPopover.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
+
+zoomOutButton.addEventListener("click", () => {
+  controller.stepCurrentZoom(-1);
+});
+
+zoomInButton.addEventListener("click", () => {
+  controller.stepCurrentZoom(1);
+});
+
+zoomResetButton.addEventListener("click", () => {
+  controller.resetCurrentZoom();
+});
+
 openSettingsButton.addEventListener("click", () => {
   controller.openSettings();
 });
@@ -578,11 +634,18 @@ window.addEventListener("beforeunload", () => {
   controller.beforeUnload();
 });
 
-window.addEventListener("click", closeContextMenu);
-window.addEventListener("blur", closeContextMenu);
+window.addEventListener("click", () => {
+  closeContextMenu();
+  closeZoomPopover();
+});
+window.addEventListener("blur", () => {
+  closeContextMenu();
+  closeZoomPopover();
+});
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeContextMenu();
+    closeZoomPopover();
   }
 });
 

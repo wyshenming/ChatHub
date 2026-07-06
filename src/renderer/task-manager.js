@@ -1,11 +1,13 @@
 import {
   APP_VERSION_STORAGE_KEY,
+  DEFAULT_ZOOM_PERCENT,
   DEFAULT_GROUP_ID,
   GROUPS_STORAGE_KEY,
   LEGACY_CUSTOM_SERVICES_KEY,
   TASK_TRANSIENT_MIGRATION_STORAGE_KEY,
   TASKS_STORAGE_KEY,
   TaskStatus,
+  ZOOM_LEVELS,
   defaultTaskSeeds,
   text,
 } from "./constants.js";
@@ -34,12 +36,18 @@ export function createTask(seed) {
     hidden: Boolean(hidden),
     visible: !hidden,
     status: seed.status || TaskStatus.PAUSED,
+    zoomPercent: normalizeZoomPercent(seed.zoomPercent),
     messages: [],
     inputDraft: "",
     scroll: { x: 0, y: 0 },
     createdAt: seed.createdAt || timestamp,
     updatedAt: seed.updatedAt || timestamp,
   };
+}
+
+export function normalizeZoomPercent(value) {
+  const parsed = Number(value);
+  return ZOOM_LEVELS.includes(parsed) ? parsed : DEFAULT_ZOOM_PERCENT;
 }
 
 export function createGroup(seed) {
@@ -312,6 +320,17 @@ export class TaskManager {
       task.id === taskId ? { ...task, ...patch, updatedAt: now() } : task
     );
     this.persist();
+  }
+
+  setTaskZoom(taskId, zoomPercent) {
+    const task = this.get(taskId);
+    if (!task) {
+      return null;
+    }
+
+    const nextZoomPercent = normalizeZoomPercent(zoomPercent);
+    this.update(taskId, { zoomPercent: nextZoomPercent });
+    return this.get(taskId);
   }
 
   renameTask(taskId, title) {

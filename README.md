@@ -6,7 +6,7 @@ ChatHub 是一个面向 Windows 的 AI 网页工作台。它基于 Electron + We
 
 ### 维护状态
 
-ChatHub 已进入稳定维护期。本项目作为自用小工具，后续不再规划功能性扩展，主要维护方向是 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
+ChatHub 已发布第一个正式版 `v1.0.0`，并进入稳定维护期。本项目作为自用小工具，后续不再规划功能性扩展，主要维护方向是 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
 ### 功能特性
 
@@ -18,6 +18,7 @@ ChatHub 已进入稳定维护期。本项目作为自用小工具，后续不再
 - 支持按当前网页或全部网页清理登录状态。
 - 支持系统托盘和关闭窗口行为设置。
 - 顶部提供当前网页的快捷刷新按钮；自定义网页还会显示快捷删除按钮。
+- 顶部提供当前页面缩放控件，缩放比例按任务保存。
 - 设置中提供关于窗口，展示版本、作者和 GitHub 仓库信息。
 - 可执行文件元数据写入作者信息：染泓如梦QAQ。
 - 支持单实例运行：重复打开 exe 时会激活已有窗口，不会创建第二个应用窗口。
@@ -85,7 +86,7 @@ ChatHub is a Windows desktop workspace for AI chat websites. It uses Electron + 
 
 ### Maintenance Status
 
-ChatHub is now in stable maintenance mode. As a personal utility, it no longer plans feature expansion; future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
+ChatHub has released its first stable version, `v1.0.0`, and is now in stable maintenance mode. As a personal utility, it no longer plans feature expansion; future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
 
 ### Features
 
@@ -97,6 +98,7 @@ ChatHub is now in stable maintenance mode. As a personal utility, it no longer p
 - Clear login state for the current page or all pages.
 - Configurable close behavior with system tray support.
 - Quick refresh button in the top bar; custom pages also show a quick delete button.
+- Current page zoom controls in the top bar, with zoom saved per task.
 - About dialog in settings with version, author, and GitHub repository information.
 - Executable metadata includes the author: 染泓如梦QAQ.
 - Single-instance behavior: opening the exe again activates the existing window instead of creating a second app window.

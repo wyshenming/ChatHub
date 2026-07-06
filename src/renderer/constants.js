@@ -8,6 +8,8 @@ export const APP_NAME = "ChatHub";
 export const APP_AUTHOR = "染泓如梦QAQ";
 export const APP_REPOSITORY_URL = "https://github.com/wyshenming/ChatHub";
 export const DEFAULT_GROUP_ID = "group-default";
+export const DEFAULT_ZOOM_PERCENT = 100;
+export const ZOOM_LEVELS = [25, 33, 50, 67, 75, 80, 90, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500];
 
 export const TaskStatus = {
   RUNNING: "running",

@@ -1121,3 +1121,88 @@
 - 待完成：提交 GitHub 仓库。
 - 待完成：创建 tag `v0.7.0`。
 - 待完成：创建 GitHub Release `v0.7.0` 并上传安装包。
+
+## 2026-07-06 当前页面缩放控件
+
+### 本轮已经完成
+
+- 在顶部刷新按钮旁新增放大镜缩放按钮。
+- 放大镜按钮已替换为用户提供的 `src/renderer/assets/zoom-in.svg`。
+- 点击放大镜后显示小气泡，包含当前比例、`-`、`+`、`重置`。
+- 支持缩放档位：`25% / 33% / 50% / 67% / 75% / 80% / 90% / 100% / 110% / 125% / 150% / 175% / 200% / 250% / 300% / 400% / 500%`。
+- 缩放比例按任务保存，切换任务后自动应用对应任务缩放。
+- 仅修改 WebView 缩放，不改变 User-Agent，不切换移动端模式，不影响登录状态。
+- 顺手检查作者名和代码常量，当前 `package.json` 与 `APP_AUTHOR` 均为 `染泓如梦QAQ`。
+
+### 已经修改的文件
+
+- `src/renderer/index.html`
+- `src/renderer/assets/zoom-in.svg`
+- `src/renderer/styles.css`
+- `src/renderer/renderer.js`
+- `src/renderer/controller.js`
+- `src/renderer/constants.js`
+- `src/renderer/task-manager.js`
+- `src/renderer/webview-manager.js`
+- `releases/README.md`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- `node --check src\renderer\constants.js` 通过。
+- `node --check src\renderer\task-manager.js` 通过。
+- `node --check src\renderer\webview-manager.js` 通过。
+- `node --check src\renderer\controller.js` 通过。
+- `node --check src\renderer\renderer.js` 通过。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- 明显乱码扫描通过：`package.json`、`src`、`README.md`、`releases/README.md` 未命中历史乱码片段。
+- 首次 `npm run dist:dir` 因 `dist\ChatHub.exe` 正在运行被占用失败。
+- 关闭 `D:\codex\ChatHub\dist\ChatHub.exe` 相关进程后，`npm run dist:dir` 通过。
+- 待人工验证：打开应用确认缩放按钮、气泡、加减、重置和任务切换后的缩放保持正常。
+
+## 2026-07-06 界面图标资产替换
+
+### 本轮已经完成
+
+- 将用户提供的整套 SVG 图标复制到 `src/renderer/assets/icons/`。
+- 替换当前界面已经用到的图标：侧边栏折叠 / 展开、分组折叠 / 展开、设置、刷新、缩放、缩放加减、重置、关于、GitHub、关闭。
+- 保留“保存 / 返回”等暂未使用图标，后续真正出现对应按钮时再接入。
+- 未修改 WebViewPool、TaskManager、站点登录状态或任务切换逻辑。
+
+### 已经修改的文件
+
+- `src/renderer/assets/icons/`
+- `src/renderer/index.html`
+- `src/renderer/renderer.js`
+- `src/renderer/styles.css`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- 待验证：启动应用确认 SVG 图标显示正常。
+- 待验证：确认侧边栏窄栏 / 展开状态下设置入口和分组箭头不变形。
+
+## 2026-07-06 发布 v1.0.0 正式版
+
+### 本轮已经完成
+
+- 按用户要求将版本号升级到 `1.0.0`。
+- 将当前页面缩放控件、用户 SVG 图标替换和维护期说明纳入第一个正式版。
+- 更新 `README.md` 与 `releases/README.md`，明确 ChatHub 已进入稳定维护期，后续默认只做 bug 修复和网页兼容维护。
+- 确认 `package.json`、`package-lock.json`、`src/preload.js` 版本一致。
+
+### 发布验证
+
+- 已验证：`node --check` 通过。
+- 已验证：`git diff --check` 通过，仅有 CRLF 提示。
+- 已验证：`npm run dist` 完整打包通过。
+- 已验证：`dist\ChatHub.exe` 元数据显示 `FileVersion=1.0.0`、`ProductVersion=1.0.0`、作者为 `染泓如梦QAQ`。
+- 已完成：复制安装包到 `releases/ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`4357252B4B6779EBE4086E9486F3F38F1AA526B5CA718065BC2289FA52A87E0D`。
+- 已完成：提交 GitHub 仓库。
+- 已完成：创建 tag `v1.0.0`。
+- 已完成：创建 GitHub Release `v1.0.0` 并上传安装包。

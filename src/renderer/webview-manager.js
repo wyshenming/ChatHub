@@ -1,4 +1,4 @@
-import { RUNTIME_PARTITION } from "./constants.js";
+import { DEFAULT_ZOOM_PERCENT, RUNTIME_PARTITION } from "./constants.js";
 
 export class WebViewManager {
   constructor(frame, callbacks) {
@@ -33,6 +33,7 @@ export class WebViewManager {
       loadedUrl: "",
       currentUrl: "",
       targetUrl: task.url || task.initialUrl || "",
+      zoomPercent: task.zoomPercent || DEFAULT_ZOOM_PERCENT,
       pendingTask: null,
       destroyLogged: false,
       loadStartAt: null,
@@ -60,6 +61,7 @@ export class WebViewManager {
   bindWebViewEvents(record) {
     record.webview.addEventListener("did-attach", () => {
       record.isAttached = true;
+      this.applyZoomPercent(record, record.zoomPercent);
       this.logLifecycle(record, "Attached");
       this.flushPendingTask(record);
     });
@@ -161,7 +163,9 @@ export class WebViewManager {
     record.lastAccessedAt = performance.now();
     record.taskTitle = task.title || task.name || task.id;
     record.targetUrl = targetUrl;
+    record.zoomPercent = task.zoomPercent || DEFAULT_ZOOM_PERCENT;
     record.webview.dataset.taskId = task.id;
+    this.applyZoomPercent(record, record.zoomPercent);
 
     this.activateRecord(record);
     this.logSwitchStart(this.activeNavigation);
@@ -205,6 +209,30 @@ export class WebViewManager {
     record.webview.style.opacity = isVisible ? "1" : "0";
     record.webview.style.pointerEvents = isVisible ? "auto" : "none";
     record.webview.style.zIndex = isVisible ? "1" : "0";
+  }
+
+  applyZoomPercent(record, zoomPercent) {
+    if (!record) {
+      return;
+    }
+
+    const normalizedZoomPercent = Number(zoomPercent) || DEFAULT_ZOOM_PERCENT;
+    record.zoomPercent = normalizedZoomPercent;
+
+    try {
+      record.webview.setZoomFactor(normalizedZoomPercent / 100);
+    } catch {
+      // Some WebView instances are not ready to receive zoom until did-attach.
+    }
+  }
+
+  setTaskZoom(taskId, zoomPercent) {
+    const record = this.webviewPool.get(taskId);
+    if (!record) {
+      return;
+    }
+
+    this.applyZoomPercent(record, zoomPercent);
   }
 
   flushPendingTask(record) {

@@ -1,10 +1,10 @@
-# ChatHub Releases / ChatHub 发布说明
+﻿# ChatHub Releases / ChatHub 发布说明
 
 ## 中文
 
-当前版本：v0.7.0
+当前版本：v1.0.0
 
-维护状态：ChatHub 已进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
+维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
 当前安装包：
 
@@ -12,12 +12,14 @@
 ChatHub-Setup-x64.exe
 ```
 
-### v0.7.0 维护修复
+### v1.0.0 正式版
 
-- 停用 ChatHub 自己的网页输入草稿采集和恢复逻辑。
-- 启动时一次性清理旧任务中的 `inputDraft`、`messages`、`scroll` 临时状态。
-- 保留 WebViewPool、任务切换、登录状态和站点持久化数据不变。
-- 已确认 SillyTavern 另有官方 `Restore User Input` 设置；若关闭后输入框不再恢复，说明该部分由 SillyTavern 自身控制。
+- 发布 ChatHub 第一个正式版。
+- 保留 ChatGPT、Gemini、DeepSeek 和自定义网页工作台能力。
+- 保留 WebViewPool、任务分组、右键管理、侧边栏窄栏、当前页面缩放、系统托盘、关于窗口等稳定能力。
+- 使用用户提供的 SVG 图标统一当前可见入口，包括设置、刷新、缩放、分组、侧边栏和弹窗关闭。
+- 保留登录状态和站点持久化数据，不清理 cookies / localStorage / IndexedDB。
+- 项目进入稳定维护期，后续默认只做 bug 修复和网页兼容维护。
 
 ### 适用平台
 
@@ -29,6 +31,7 @@ ChatHub-Setup-x64.exe
 - 内置 ChatGPT、Gemini、DeepSeek。
 - 支持添加和编辑自定义 AI 网页。
 - 侧边栏支持折叠为窄栏，并保留任务首字母 / 首字符徽标和设置入口。
+- 顶部提供当前页面缩放控件。
 - WebView 缓存池按任务复用页面实例，减少任务切换时的重复加载。
 - 设置中可配置 WebView 最大常驻数量。
 - WebView 性能日志写入滚动日志文件，避免日志无限增长。
@@ -46,9 +49,9 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v0.7.0
+Current version: v1.0.0
 
-Maintenance status: ChatHub is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
+Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
 Current installer:
 
@@ -56,12 +59,14 @@ Current installer:
 ChatHub-Setup-x64.exe
 ```
 
-### v0.7.0 Maintenance Fix
+### v1.0.0 Stable Release
 
-- Disabled ChatHub's own web input draft capture and restore logic.
-- Added a one-time startup migration to clear old task `inputDraft`, `messages`, and `scroll` transient state.
-- Kept WebViewPool, task switching, login state, and website persistent storage unchanged.
-- Confirmed SillyTavern has its own official `Restore User Input` setting; if disabling it stops the draft from returning, that behavior is controlled by SillyTavern itself.
+- Released the first stable version of ChatHub.
+- Kept the ChatGPT, Gemini, DeepSeek, and custom web workspace features.
+- Kept stable features such as WebViewPool, task groups, context-menu management, compact sidebar, page zoom, system tray behavior, and the About dialog.
+- Unified currently visible UI entries with user-provided SVG icons, including settings, refresh, zoom, groups, sidebar, and modal close buttons.
+- Preserved login state and website persistent data without clearing cookies, localStorage, or IndexedDB.
+- Entered stable maintenance mode; future changes should default to bug fixes and website compatibility maintenance.
 
 ### Platform
 
@@ -72,6 +77,7 @@ ChatHub-Setup-x64.exe
 - Electron + WebView desktop ChatHub.
 - Built-in ChatGPT, Gemini, and DeepSeek entries.
 - Custom AI web pages can be added and edited.
+- Current page zoom controls are available in the top bar.
 - Collapsible sidebar with compact task initial badges and a settings entry.
 - WebView pool support reuses page instances per task to reduce reloads when switching tasks.
 - Configurable maximum WebView pool size.

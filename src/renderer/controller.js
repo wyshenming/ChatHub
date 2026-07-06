@@ -1,4 +1,4 @@
-import { RUNTIME_PARTITION, TaskStatus, text } from "./constants.js";
+import { DEFAULT_ZOOM_PERCENT, RUNTIME_PARTITION, TaskStatus, ZOOM_LEVELS, text } from "./constants.js";
 import { createCustomTask } from "./task-manager.js";
 import { normalizeUrl, originFromUrl } from "./utils.js";
 
@@ -96,6 +96,40 @@ export class AppController {
     }
 
     this.webViewManager.reload();
+  }
+
+  setCurrentZoom(zoomPercent) {
+    const task = this.taskManager.active();
+    if (!task) {
+      return;
+    }
+
+    const updatedTask = this.taskManager.setTaskZoom(task.id, zoomPercent);
+    if (!updatedTask) {
+      return;
+    }
+
+    this.webViewManager.setTaskZoom(updatedTask.id, updatedTask.zoomPercent);
+    this.emitTasks();
+  }
+
+  stepCurrentZoom(direction) {
+    const task = this.taskManager.active();
+    if (!task) {
+      return;
+    }
+
+    const currentIndex = ZOOM_LEVELS.indexOf(task.zoomPercent || DEFAULT_ZOOM_PERCENT);
+    const safeIndex = currentIndex >= 0 ? currentIndex : ZOOM_LEVELS.indexOf(DEFAULT_ZOOM_PERCENT);
+    const nextIndex = Math.min(
+      ZOOM_LEVELS.length - 1,
+      Math.max(0, safeIndex + Math.sign(direction))
+    );
+    this.setCurrentZoom(ZOOM_LEVELS[nextIndex]);
+  }
+
+  resetCurrentZoom() {
+    this.setCurrentZoom(DEFAULT_ZOOM_PERCENT);
   }
 
   async clearTaskCache(taskId) {
