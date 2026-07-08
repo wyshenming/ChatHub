@@ -374,3 +374,35 @@ npm run dist
 - 已完成：更新 `releases/ChatHub-Setup-x64.exe` 安装包副本。
 - 已完成：提交并推送 GitHub 仓库。
 - 暂不处理：GitHub Release 发布，除非用户明确要求同步发布 release。
+
+## v1.0.2 覆盖安装升级修复
+
+- 已完成：分析覆盖安装只卸载不继续安装的原因。
+- 已完成：升级模式下跳过自定义完整卸载清理。
+- 已完成：新安装器等待旧版本延迟清理脚本结束后再释放新文件。
+- 已完成：升级模式下容错旧卸载器“文件已删但返回非 0”的情况。
+- 已完成：版本号升级到 `1.0.2`。
+- 已完成：完整打包并确认 `dist\ChatHub.exe` 元数据版本为 `1.0.2`。
+- 已完成：更新 `releases/ChatHub-Setup-x64.exe` 安装包副本。
+- 待人工验证：从旧版本覆盖安装到 `1.0.2`，确认一次运行安装包即可完成升级。
+- 待验证：提交 GitHub 仓库。
+
+## 完全退出后恢复默认页面
+
+- 已完成：启动时将任务 URL 从上次运行页面恢复到 `initialUrl`。
+- 已完成：启动时清理任务临时状态 `inputDraft/messages/scroll`。
+- 已完成：完全退出前清理 WebView runtime cache。
+- 已确认设计：不清理 cookies / localStorage / sessionStorage / IndexedDB。
+- 已完成：完整打包并更新测试安装包。
+- 待验证：完全退出并重新启动后，所有任务回到默认入口。
+- 待验证：登录状态保留。
+
+## v1.1.0 发布
+
+- 已完成：版本号升级到 `1.1.0`。
+- 已完成：清理测试安装包 `dist\ChatHub-Setup-v1.0.1-test.exe`。
+- 已完成：清理测试安装目录 `D:\codex\ChatHub_UpgradeSmoke`。
+- 已完成：完整打包并确认 `dist\ChatHub.exe` 元数据版本为 `1.1.0`。
+- 已完成：更新 `releases/ChatHub-Setup-x64.exe` 安装包副本。
+- 已完成：提交并推送 GitHub 仓库。
+- 待确认：是否同步创建 GitHub Release `v1.1.0`。

@@ -8,6 +8,7 @@ app.setPath("userData", path.join(app.getPath("appData"), "AI Chat Hub"));
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 const isQuitForUninstall = process.argv.includes("--quit-for-uninstall");
+const runtimePartition = "persist:chathub-runtime";
 
 const defaultCloseSettings = {
   closeBehavior: "tray",
@@ -26,6 +27,7 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 let isClosePromptOpen = false;
+let didCleanPageCacheBeforeQuit = false;
 
 function quitForUninstall() {
   isQuitting = true;
@@ -207,6 +209,12 @@ ipcMain.handle("clear-service-cache", async (_event, targets) => {
   return { cleared: normalizedTargets.length };
 });
 
+async function clearPageCacheBeforeQuit() {
+  const runtimeSession = session.fromPartition(runtimePartition);
+  await runtimeSession.clearCache();
+  runtimeSession.flushStorageData();
+}
+
 ipcMain.handle("get-close-settings", () => closeSettings);
 
 ipcMain.handle("set-close-settings", (_event, settings) => {
@@ -384,4 +392,21 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin" && isQuitting) {
     app.quit();
   }
+});
+
+app.on("before-quit", (event) => {
+  if (didCleanPageCacheBeforeQuit) {
+    return;
+  }
+
+  didCleanPageCacheBeforeQuit = true;
+  event.preventDefault();
+
+  clearPageCacheBeforeQuit()
+    .catch((error) => {
+      console.warn("[ChatHub] Failed to clear page cache before quit:", error);
+    })
+    .finally(() => {
+      app.quit();
+    });
 });

@@ -1314,3 +1314,122 @@
 - 已完成：复制安装包到 `releases/ChatHub-Setup-x64.exe`。
 - 新安装包 SHA256：`28BC493C130AC3DE43AD9A69E90DF40FC31407A7492D65C55758E79C4FFED7AE`。
 - 已完成：提交并推送 GitHub 仓库。
+
+## 2026-07-09 覆盖安装升级流程修复
+
+### 问题现象
+
+- 用户反馈升级版本覆盖安装时，安装包会先直接执行卸载。
+- 卸载结束后没有继续安装，需要再次运行安装包才会重新安装。
+
+### 原因分析
+
+- electron-builder 升级安装会调用旧版本卸载器，并传入 `--updated`，对应 NSIS 的 `${isUpdated}`。
+- 现有 `customUnInstall` 未判断 `${isUpdated}`，升级卸载时仍执行完整 `RMDir /r "$INSTDIR"` 和延迟目录清理。
+- 已发布的旧卸载器还会启动延迟清理脚本，可能在新安装器释放文件前后继续删除安装目录。
+
+### 本轮已经完成
+
+- 将版本号升级到 `1.0.2`。
+- 在 `build/installer.nsh` 中增加升级模式判断：`${isUpdated}` 时跳过自定义完整安装目录清理和用户数据删除逻辑。
+- 增加 `customUnInstallCheck`：新安装器在调用旧卸载器后，若处于升级模式，会等待旧延迟清理结束后再继续释放新文件。
+- 升级模式下，如果旧卸载器返回非 0 但旧 `ChatHub.exe` 已经不存在，则视为旧程序文件已移除并继续安装，避免“只卸载不安装”。
+- 更新 `README.md` 与 `releases/README.md` 的当前版本和 v1.0.2 维护版说明。
+
+### 已经修改的文件
+
+- `build/installer.nsh`
+- `package.json`
+- `package-lock.json`
+- `src/preload.js`
+- `README.md`
+- `releases/README.md`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- 已验证：`node --check src\preload.js` 通过。
+- 已验证：`git diff --check` 通过，仅有 CRLF 提示。
+- 已验证：`npm run dist` 完整打包通过。
+- 已验证：`dist\ChatHub.exe` 元数据显示 `FileVersion=1.0.2`、`ProductVersion=1.0.2`。
+- 已完成：复制安装包到 `releases/ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`D6C395B0E61A5F38CF8401CE9B5BB8FE67092790458E848F5D22022F5B072DA4`。
+- 待人工验证：用 v1.0.2 安装包覆盖安装旧版本，确认卸载后会继续安装，不需要第二次运行安装包。
+
+## 2026-07-09 完全退出后恢复默认页面
+
+### 问题现象
+
+- 完全退出 ChatHub 后，过一段时间重新启动。
+- 点击对应 WebView 任务时，页面仍然停留在上次退出时的会话 / 子页面。
+
+### 原因分析
+
+- 任务切换和退出前会保存当前 WebView 快照。
+- `TaskManager.saveSnapshot()` 会把当前 WebView URL 写入任务的 `url`。
+- 下次启动时任务直接使用保存后的 `url`，因此会回到上次退出时的页面。
+
+### 本轮已经完成
+
+- 启动时重置任务运行态页面：如果 `task.url` 偏离 `task.initialUrl`，自动恢复到默认入口。
+- 同时清理任务临时状态：`inputDraft`、`messages`、`scroll`。
+- 完全退出应用前清理 WebView runtime cache：调用 `session.fromPartition("persist:chathub-runtime").clearCache()`。
+- 明确不调用 `clearStorageData()`，不清理 cookies、localStorage、sessionStorage、IndexedDB。
+
+### 已经修改的文件
+
+- `src/main.js`
+- `src/renderer/task-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- 已验证：`node --check src\main.js` 通过。
+- 已验证：`node --check src\renderer\task-manager.js` 通过。
+- 已验证：完整打包通过。
+- 已验证：`dist\ChatHub.exe` 元数据显示 `FileVersion=1.0.2`、`ProductVersion=1.0.2`。
+- 已完成：复制安装包到 `releases/ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`D6C395B0E61A5F38CF8401CE9B5BB8FE67092790458E848F5D22022F5B072DA4`。
+- 待人工验证：完全退出后重新启动，ChatGPT / Gemini / DeepSeek 和自定义网页均回到默认入口。
+- 待人工验证：登录状态仍保留。
+
+## 2026-07-09 发布 v1.1.0 维护版
+
+### 本轮已经完成
+
+- 按用户确认结果将版本号升级到 `1.1.0`。
+- 收口覆盖安装升级修复：覆盖安装仍会先卸载旧程序文件，但会继续自动安装新版本，不再需要第二次运行安装包。
+- 收口完全退出后的默认页面恢复：重启后任务回到默认入口，同时保留登录状态。
+- 清理本轮测试残留：
+  - `D:\codex\ChatHub_UpgradeSmoke`
+  - `dist\ChatHub-Setup-v1.0.1-test.exe`
+- 更新 `README.md` 与 `releases/README.md` 的当前版本和 v1.1.0 维护版说明。
+
+### 已经修改的文件
+
+- `build/installer.nsh`
+- `package.json`
+- `package-lock.json`
+- `src/main.js`
+- `src/preload.js`
+- `src/renderer/task-manager.js`
+- `README.md`
+- `releases/README.md`
+- `releases/ChatHub-Setup-x64.exe`
+- `DEVLOG.md`
+- `TODO.md`
+- `DEVICE_LOG.md`
+
+### 验证结果
+
+- 已验证：`node --check` 通过。
+- 已验证：`git diff --check` 通过，仅有 CRLF 提示。
+- 已验证：`npm run dist` 完整打包通过。
+- 已验证：`dist\ChatHub.exe` 元数据显示 `FileVersion=1.1.0`、`ProductVersion=1.1.0`。
+- 已完成：复制安装包到 `releases/ChatHub-Setup-x64.exe`。
+- 新安装包 SHA256：`3EB0B77D58F20DBBF1811423C643B23CA39EB10A8D960FEF63F497405C4B6B80`。
+- 已完成：提交并推送 GitHub 仓库。

@@ -6,7 +6,7 @@ ChatHub 是一个面向 Windows 的 AI 网页工作台。它基于 Electron + We
 
 ### 维护状态
 
-ChatHub 已发布正式版 `v1.0.1`，并进入稳定维护期。本项目作为自用小工具，后续不再规划功能性扩展，主要维护方向是 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
+ChatHub 已发布正式版 `v1.1.0`，并进入稳定维护期。本项目作为自用小工具，后续不再规划功能性扩展，主要维护方向是 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
 ### 功能特性
 
@@ -86,7 +86,7 @@ ChatHub is a Windows desktop workspace for AI chat websites. It uses Electron + 
 
 ### Maintenance Status
 
-ChatHub has released stable version `v1.0.1` and is now in stable maintenance mode. As a personal utility, it no longer plans feature expansion; future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
+ChatHub has released stable version `v1.1.0` and is now in stable maintenance mode. As a personal utility, it no longer plans feature expansion; future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
 
 ### Features
 

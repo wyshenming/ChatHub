@@ -81,6 +81,7 @@ export class TaskManager {
     this.groups = this.loadGroups();
     this.migrateForAppVersion(window.aiChatHub?.version || "unknown");
     this.migrateTransientTaskState();
+    this.resetRuntimePageStateOnStartup();
     this.normalizeTaskGroups();
     this.activeTaskId = this.all()[0]?.id;
   }
@@ -174,6 +175,39 @@ export class TaskManager {
       updatedAt: now(),
     }));
     this.persist();
+  }
+
+  resetRuntimePageStateOnStartup() {
+    let changed = false;
+
+    this.tasks = this.tasks.map((task) => {
+      const initialUrl = isHttpUrl(task.initialUrl) ? task.initialUrl : task.url;
+      const shouldResetUrl = initialUrl && task.url !== initialUrl;
+      const hasTransientState =
+        task.inputDraft ||
+        (Array.isArray(task.messages) && task.messages.length > 0) ||
+        task.scroll?.x ||
+        task.scroll?.y;
+
+      if (!shouldResetUrl && !hasTransientState) {
+        return task;
+      }
+
+      changed = true;
+      return {
+        ...task,
+        url: shouldResetUrl ? initialUrl : task.url,
+        origin: originFromUrl(shouldResetUrl ? initialUrl : task.url) || task.origin,
+        inputDraft: "",
+        messages: [],
+        scroll: { x: 0, y: 0 },
+        updatedAt: now(),
+      };
+    });
+
+    if (changed) {
+      this.persist();
+    }
   }
 
   loadGroups() {

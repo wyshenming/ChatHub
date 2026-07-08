@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.0.1
+当前版本：v1.1.0
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,20 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.1.0 维护版
+
+- 修复覆盖安装升级时只执行卸载、需要再次运行安装包才会安装的问题。
+- 完全退出应用后重新启动，任务页面恢复默认入口，同时保留登录状态。
+- 退出前仅清理 WebView 页面缓存，不清理 cookies / localStorage / sessionStorage / IndexedDB。
+- 清理本轮开发产生的测试安装包和临时安装目录。
+
+### v1.0.2 维护版
+
+- 修复覆盖安装升级时只执行卸载、需要再次运行安装包才会安装的问题。
+- 升级卸载时跳过自定义完整目录清理，避免把升级流程当作用户主动卸载。
+- 兼容旧版本卸载器的延迟清理脚本：新安装器会等待旧清理结束后再释放新文件。
+- 默认继续保留用户数据和登录状态。
 
 ### v1.0.1 维护版
 
@@ -57,7 +71,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.0.1
+Current version: v1.1.0
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -66,6 +80,20 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.1.0 Maintenance Release
+
+- Fixed upgrade installs that only ran uninstall first and required launching the installer a second time.
+- After fully quitting and restarting the app, tasks now return to their default entry pages while preserving login state.
+- Clears only WebView page cache before quit, without clearing cookies, localStorage, sessionStorage, or IndexedDB.
+- Removed temporary test installer and upgrade smoke-test files from the local workspace.
+
+### v1.0.2 Maintenance Release
+
+- Fixed upgrade installs that only ran uninstall first and required launching the installer a second time.
+- Skips custom full install-directory cleanup during upgrade uninstall, so upgrade flow is not treated as a manual uninstall.
+- Adds compatibility for legacy delayed cleanup scripts by waiting before extracting the new files.
+- User data and login state remain preserved by default.
 
 ### v1.0.1 Maintenance Release
 

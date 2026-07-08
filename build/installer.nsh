@@ -47,6 +47,37 @@
   ${endif}
 !macroend
 
+!macro customUnInstallCheck
+  IfErrors 0 +3
+    DetailPrint "Uninstall was not successful. Not able to launch uninstaller!"
+    Return
+
+  ${if} ${isUpdated}
+    ${if} $R0 != 0
+      IfFileExists "$INSTDIR\${APP_EXECUTABLE_FILENAME}" upgradeUninstallFailed upgradeUninstallCanContinue
+
+      upgradeUninstallFailed:
+        MessageBox MB_OK|MB_ICONEXCLAMATION "Uninstall failed: $R0"
+        DetailPrint "Uninstall was not successful. Uninstaller error code: $R0."
+        SetErrorLevel 2
+        Quit
+
+      upgradeUninstallCanContinue:
+        DetailPrint "Legacy uninstaller returned $R0, but old app files were removed. Continuing upgrade."
+    ${endif}
+
+    DetailPrint "Waiting for legacy delayed uninstall cleanup before installing new files..."
+    Sleep 7000
+  ${else}
+    ${if} $R0 != 0
+      MessageBox MB_OK|MB_ICONEXCLAMATION "Uninstall failed: $R0"
+      DetailPrint "Uninstall was not successful. Uninstaller error code: $R0."
+      SetErrorLevel 2
+      Quit
+    ${endif}
+  ${endif}
+!macroend
+
 !macro customUnInit
   StrCpy $DeleteChatHubUserData "0"
 !macroend
@@ -102,6 +133,12 @@ FunctionEnd
 !endif
 
 !macro customUnInstall
+  ${if} ${isUpdated}
+    DetailPrint "Upgrade uninstall detected; skipping full install directory cleanup."
+    DetailPrint "Keeping ChatHub user data during upgrade."
+    Goto customUnInstallDone
+  ${endif}
+
   DetailPrint "Cleaning remaining ChatHub program files..."
   RMDir /r "$INSTDIR"
 
@@ -129,4 +166,6 @@ FunctionEnd
   ${else}
     DetailPrint "Keeping ChatHub user data."
   ${endif}
+
+  customUnInstallDone:
 !macroend
