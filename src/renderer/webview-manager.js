@@ -8,6 +8,7 @@ export class WebViewManager {
     this.switchStartAt = null;
     this.activeNavigation = null;
     this.currentTaskId = null;
+    this.comparisonTaskId = null;
     this.webview = null;
     this.webviewPool = new Map();
     this.maxWebViewPoolSize = 4;
@@ -199,9 +200,8 @@ export class WebViewManager {
   }
 
   activateRecord(targetRecord) {
-    for (const record of this.webviewPool.values()) {
-      this.applyVisibility(record, record.taskId === targetRecord.taskId);
-    }
+    this.currentTaskId = targetRecord.taskId;
+    this.updateVisibleRecords();
   }
 
   applyVisibility(record, isVisible) {
@@ -209,6 +209,24 @@ export class WebViewManager {
     record.webview.style.opacity = isVisible ? "1" : "0";
     record.webview.style.pointerEvents = isVisible ? "auto" : "none";
     record.webview.style.zIndex = isVisible ? "1" : "0";
+  }
+
+  updateVisibleRecords() {
+    if (this.currentTaskId && this.currentTaskId === this.comparisonTaskId) {
+      this.comparisonTaskId = null;
+    }
+
+    for (const record of this.webviewPool.values()) {
+      const isPrimary = record.taskId === this.currentTaskId;
+      const isComparison = record.taskId === this.comparisonTaskId;
+      record.webview.classList.toggle("task-webview-primary", isPrimary);
+      record.webview.classList.toggle("task-webview-comparison", isComparison);
+      this.applyVisibility(record, isPrimary || isComparison);
+    }
+  }
+
+  refreshVisibleRecords() {
+    this.updateVisibleRecords();
   }
 
   applyZoomPercent(record, zoomPercent) {
@@ -233,6 +251,97 @@ export class WebViewManager {
     }
 
     this.applyZoomPercent(record, zoomPercent);
+  }
+
+  loadComparisonTask(task) {
+    if (!task || task.id === this.currentTaskId) {
+      return;
+    }
+
+    const existingRecord = this.webviewPool.get(task.id);
+    const record = existingRecord || this.createWebViewRecord(task);
+    const targetUrl = task.url || task.initialUrl || "";
+    const currentUrl = this.safeGetUrl(record);
+    const configuredUrlChanged = Boolean(existingRecord) && !this.isSameUrl(record.loadedUrl || record.targetUrl, targetUrl);
+    const waitForExistingLoad = !record.hasLoaded && record.isLoadingTarget && !configuredUrlChanged;
+    const needReload = (!record.hasLoaded && !record.isLoadingTarget) || configuredUrlChanged;
+
+    if (!existingRecord) {
+      this.webviewPool.set(task.id, record);
+    }
+
+    this.comparisonTaskId = task.id;
+    record.lastAccessedAt = performance.now();
+    record.taskTitle = task.title || task.name || task.id;
+    record.targetUrl = targetUrl;
+    record.zoomPercent = task.zoomPercent || DEFAULT_ZOOM_PERCENT;
+    record.webview.dataset.taskId = task.id;
+    this.applyZoomPercent(record, record.zoomPercent);
+    this.updateVisibleRecords();
+    this.logSwitchDecision(task, currentUrl, targetUrl, needReload);
+
+    if (waitForExistingLoad) {
+      this.logAwaitExistingLoad(record);
+      this.evictOverflow();
+      return;
+    }
+
+    if (!needReload) {
+      record.isNavigationReady = true;
+      this.restoreTaskContext(task.id);
+      this.logCachedSwitch(record);
+      this.evictOverflow();
+      return;
+    }
+
+    if (!record.isAttached || !record.isNavigationReady) {
+      record.pendingTask = task;
+      this.evictOverflow();
+      return;
+    }
+
+    this.loadTaskUrl(task, record);
+    this.evictOverflow();
+  }
+
+  closeComparison() {
+    this.comparisonTaskId = null;
+    this.updateVisibleRecords();
+  }
+
+  promoteComparisonToPrimary() {
+    if (!this.comparisonTaskId) {
+      return;
+    }
+
+    const record = this.webviewPool.get(this.comparisonTaskId);
+    this.currentTaskId = this.comparisonTaskId;
+    this.comparisonTaskId = null;
+    this.webview = record?.webview || null;
+    if (record) {
+      record.lastAccessedAt = performance.now();
+    }
+    this.updateVisibleRecords();
+  }
+
+  swapPrimaryAndComparison() {
+    if (!this.currentTaskId || !this.comparisonTaskId) {
+      return;
+    }
+
+    const nextPrimaryTaskId = this.comparisonTaskId;
+    this.comparisonTaskId = this.currentTaskId;
+    this.currentTaskId = nextPrimaryTaskId;
+    const record = this.webviewPool.get(this.currentTaskId);
+    this.webview = record?.webview || null;
+    if (record) {
+      record.lastAccessedAt = performance.now();
+    }
+    const comparisonRecord = this.webviewPool.get(this.comparisonTaskId);
+    if (comparisonRecord) {
+      comparisonRecord.lastAccessedAt = performance.now();
+    }
+    this.updateVisibleRecords();
   }
 
   flushPendingTask(record) {
@@ -325,6 +434,11 @@ export class WebViewManager {
     record?.webview.reload();
   }
 
+  reloadTask(taskId) {
+    const record = this.webviewPool.get(taskId);
+    record?.webview.reload();
+  }
+
   setMaxWebViewPoolSize(value) {
     const parsed = Number(value);
     this.maxWebViewPoolSize = [2, 3, 4, 5, 6].includes(parsed) ? parsed : 4;
@@ -344,7 +458,7 @@ export class WebViewManager {
 
   findLruEvictionCandidate() {
     return [...this.webviewPool.values()]
-      .filter((record) => record.taskId !== this.currentTaskId)
+      .filter((record) => record.taskId !== this.currentTaskId && record.taskId !== this.comparisonTaskId)
       .sort((left, right) => left.lastAccessedAt - right.lastAccessedAt)[0];
   }
 
@@ -370,6 +484,10 @@ export class WebViewManager {
       this.currentTaskId = null;
       this.webview = null;
     }
+    if (this.comparisonTaskId === taskId) {
+      this.comparisonTaskId = null;
+    }
+    this.updateVisibleRecords();
   }
 
   logWebViewPoolEvict(record, reason, poolSizeBefore, poolSizeAfter) {
@@ -380,6 +498,7 @@ export class WebViewManager {
 
   clear() {
     this.currentTaskId = null;
+    this.comparisonTaskId = null;
     this.webview = null;
     for (const record of this.webviewPool.values()) {
       this.applyVisibility(record, false);

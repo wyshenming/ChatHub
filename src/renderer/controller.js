@@ -9,6 +9,7 @@ export class AppController {
     this.storageManager = storageManager;
     this.view = view;
     this.aboutInfo = aboutInfo;
+    this.comparisonTaskId = null;
   }
 
   start() {
@@ -48,6 +49,8 @@ export class AppController {
       availableGroups: this.taskManager.allGroups(),
       activeTaskId: this.taskManager.activeTaskId,
       activeTask: this.taskManager.active(),
+      comparisonTaskId: this.comparisonTaskId,
+      comparisonTask: this.taskManager.get(this.comparisonTaskId),
     });
   }
 
@@ -73,6 +76,10 @@ export class AppController {
       return;
     }
 
+    if (nextTask.id === this.comparisonTaskId) {
+      this.closeSplitView({ silent: true });
+    }
+
     this.view.setStatus(text.switching);
     await this.persistCurrentTaskAsPaused();
     this.taskManager.setActive(nextTask.id);
@@ -80,9 +87,120 @@ export class AppController {
     this.webViewManager.loadTask(this.taskManager.active());
   }
 
+  openTaskInSplit(taskId) {
+    const task = this.taskManager.get(taskId);
+    const activeTask = this.taskManager.active();
+    if (!task) {
+      return;
+    }
+
+    if (task.id === activeTask?.id) {
+      this.view.alert("\u8be5\u9875\u9762\u5df2\u5728\u5de6\u4fa7\u663e\u793a\u3002");
+      return;
+    }
+
+    this.comparisonTaskId = task.id;
+    this.webViewManager.loadComparisonTask(task);
+    this.emitTasks();
+  }
+
+  async openTaskOnSide(taskId, side) {
+    const task = this.taskManager.get(taskId);
+    const activeTask = this.taskManager.active();
+    if (!task) {
+      return;
+    }
+
+    if (side === "right") {
+      if (task.id === this.comparisonTaskId) {
+        this.webViewManager.refreshVisibleRecords();
+        return;
+      }
+
+      if (task.id === activeTask?.id && this.comparisonTaskId) {
+        await this.swapSplitSides();
+        return;
+      }
+
+      if (task.id !== activeTask?.id) {
+        this.openTaskInSplit(task.id);
+      }
+      return;
+    }
+
+    if (task.id === activeTask?.id) {
+      this.webViewManager.refreshVisibleRecords();
+      return;
+    }
+
+    if (task.id === this.comparisonTaskId) {
+      await this.swapSplitSides();
+      return;
+    }
+
+    this.view.setStatus(text.switching);
+    await this.persistCurrentTaskAsPaused();
+    this.taskManager.setActive(task.id);
+    this.emitTasks();
+    this.webViewManager.loadTask(task);
+  }
+
+  async swapSplitSides() {
+    if (!this.comparisonTaskId) {
+      return;
+    }
+
+    await this.persistCurrentTaskAsPaused();
+    const previousActiveTaskId = this.taskManager.activeTaskId;
+    this.taskManager.setActive(this.comparisonTaskId);
+    this.comparisonTaskId = previousActiveTaskId;
+    this.webViewManager.swapPrimaryAndComparison();
+    this.emitTasks();
+  }
+
+  closeSplitView(options = {}) {
+    this.webViewManager.closeComparison();
+    this.comparisonTaskId = null;
+    if (!options.silent) {
+      this.emitTasks();
+    }
+  }
+
+  async closeSplitSide(side) {
+    if (!this.comparisonTaskId) {
+      return;
+    }
+
+    if (side === "left") {
+      await this.persistCurrentTaskAsPaused();
+      const nextTask = this.taskManager.get(this.comparisonTaskId);
+      if (!nextTask) {
+        this.closeSplitView();
+        return;
+      }
+
+      this.taskManager.setActive(nextTask.id);
+      this.comparisonTaskId = null;
+      this.webViewManager.promoteComparisonToPrimary();
+      this.emitTasks();
+      return;
+    }
+
+    this.closeSplitView();
+  }
+
   async reloadCurrent() {
     this.webViewManager.reload();
     this.view.closeSettingsModal();
+  }
+
+  reloadSide(side) {
+    const task = this.taskForSide(side);
+    if (!task) {
+      return;
+    }
+
+    this.webViewManager.reloadTask(task.id);
   }
 
   async reloadTask(taskId) {
@@ -95,11 +213,15 @@ export class AppController {
       await this.selectTask(task.id);
     }
 
-    this.webViewManager.reload();
+    this.webViewManager.reloadTask(task.id);
   }
 
   setCurrentZoom(zoomPercent) {
-    const task = this.taskManager.active();
+    this.setZoomSide("left", zoomPercent);
+  }
+
+  setZoomSide(side, zoomPercent) {
+    const task = this.taskForSide(side);
     if (!task) {
       return;
     }
@@ -113,8 +235,20 @@ export class AppController {
     this.emitTasks();
   }
 
+  taskForSide(side) {
+    if (side === "right") {
+      return this.taskManager.get(this.comparisonTaskId);
+    }
+
+    return this.taskManager.active();
+  }
+
   stepCurrentZoom(direction) {
-    const task = this.taskManager.active();
+    this.stepZoomSide("left", direction);
+  }
+
+  stepZoomSide(side, direction) {
+    const task = this.taskForSide(side);
     if (!task) {
       return;
     }
@@ -125,11 +259,15 @@ export class AppController {
       ZOOM_LEVELS.length - 1,
       Math.max(0, safeIndex + Math.sign(direction))
     );
-    this.setCurrentZoom(ZOOM_LEVELS[nextIndex]);
+    this.setZoomSide(side, ZOOM_LEVELS[nextIndex]);
   }
 
   resetCurrentZoom() {
-    this.setCurrentZoom(DEFAULT_ZOOM_PERCENT);
+    this.resetZoomSide("left");
+  }
+
+  resetZoomSide(side) {
+    this.setZoomSide(side, DEFAULT_ZOOM_PERCENT);
   }
 
   async clearTaskCache(taskId) {
@@ -399,6 +537,9 @@ export class AppController {
         if (updatedTask.id === this.taskManager.activeTaskId) {
           this.webViewManager.loadTask(updatedTask);
         }
+        if (updatedTask.id === this.comparisonTaskId) {
+          this.webViewManager.loadComparisonTask(updatedTask);
+        }
       }
 
       this.emitTasks();
@@ -423,14 +564,23 @@ export class AppController {
     }
 
     const wasActive = task.id === this.taskManager.activeTaskId;
+    const wasComparison = task.id === this.comparisonTaskId;
     this.taskManager.remove(task.id);
     this.webViewManager.removeTask(task.id);
+    if (wasComparison) {
+      this.comparisonTaskId = null;
+    }
     this.emitTasks();
 
     if (wasActive) {
       const nextTask = this.taskManager.active();
       if (nextTask) {
-        this.webViewManager.loadTask(nextTask);
+        if (nextTask.id === this.comparisonTaskId) {
+          this.comparisonTaskId = null;
+          this.webViewManager.promoteComparisonToPrimary();
+        } else {
+          this.webViewManager.loadTask(nextTask);
+        }
       } else {
         this.webViewManager.clear();
       }

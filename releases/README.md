@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.0.0
+当前版本：v1.0.1
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,14 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.0.1 维护版
+
+- 新增主窗口内左右分屏对照模式，可同时查看两个 WebView 页面。
+- 分屏时左右页面各自提供刷新、缩放和关闭按钮。
+- 支持拖动任务到工作区左 / 右侧打开分屏，并支持拖动页面工具栏交换左右位置。
+- 修复左侧侧边栏分组展开 / 收起图标方向用反的问题。
+- 保持登录状态和站点持久化数据不变，不清理 cookies / localStorage / IndexedDB。
 
 ### v1.0.0 正式版
 
@@ -49,7 +57,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.0.0
+Current version: v1.0.1
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -58,6 +66,14 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.0.1 Maintenance Release
+
+- Added in-window split view for comparing two WebView pages side by side.
+- Each split pane now has its own refresh, zoom, and close controls.
+- Supports dragging tasks to the left / right workspace area and dragging pane toolbars to swap sides.
+- Fixed reversed expand / collapse icons in the left sidebar group list.
+- Preserves login state and website persistent data without clearing cookies, localStorage, or IndexedDB.
 
 ### v1.0.0 Stable Release
 

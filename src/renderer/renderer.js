@@ -9,15 +9,34 @@ const serviceList = document.querySelector("#service-list");
 const appShell = document.querySelector(".app-shell");
 const sidebar = document.querySelector(".sidebar");
 const webviewFrame = document.querySelector("#webview-frame");
+const splitDropOverlay = document.querySelector("#split-drop-overlay");
 const title = document.querySelector("#current-title");
+const splitTitle = document.querySelector("#split-title");
 const status = document.querySelector("#status");
-const reloadButton = document.querySelector("#reload-current");
-const openZoomButton = document.querySelector("#open-zoom");
-const zoomPopover = document.querySelector("#zoom-popover");
-const zoomOutButton = document.querySelector("#zoom-out");
-const zoomInButton = document.querySelector("#zoom-in");
-const zoomResetButton = document.querySelector("#zoom-reset");
-const zoomValue = document.querySelector("#zoom-value");
+const paneToolbarLeft = document.querySelector("#pane-toolbar-left");
+const paneToolbarRight = document.querySelector("#pane-toolbar-right");
+const reloadLeftButton = document.querySelector("#reload-left");
+const reloadRightButton = document.querySelector("#reload-right");
+const closeLeftSplitButton = document.querySelector("#close-left-split");
+const closeRightSplitButton = document.querySelector("#close-right-split");
+const paneZoomControls = {
+  left: {
+    openButton: document.querySelector("#open-zoom-left"),
+    popover: document.querySelector("#zoom-popover-left"),
+    outButton: document.querySelector("#zoom-out-left"),
+    inButton: document.querySelector("#zoom-in-left"),
+    resetButton: document.querySelector("#zoom-reset-left"),
+    value: document.querySelector("#zoom-value-left"),
+  },
+  right: {
+    openButton: document.querySelector("#open-zoom-right"),
+    popover: document.querySelector("#zoom-popover-right"),
+    outButton: document.querySelector("#zoom-out-right"),
+    inButton: document.querySelector("#zoom-in-right"),
+    resetButton: document.querySelector("#zoom-reset-right"),
+    value: document.querySelector("#zoom-value-right"),
+  },
+};
 const toggleSidebarButton = document.querySelector("#toggle-sidebar");
 const sidebarToggleIcon = document.querySelector("#sidebar-toggle-icon");
 const openSettingsButton = document.querySelector("#open-settings");
@@ -54,31 +73,40 @@ let contextMenu = null;
 let textPromptResolve = null;
 let sidebarCollapsed = false;
 let editingSiteTaskId = null;
-let currentZoomPercent = DEFAULT_ZOOM_PERCENT;
+let splitDropSide = null;
+let draggedPaneSide = null;
 
 function closeContextMenu() {
   contextMenu?.remove();
   contextMenu = null;
 }
 
-function closeZoomPopover() {
-  zoomPopover.hidden = true;
-  openZoomButton.setAttribute("aria-expanded", "false");
+function closeZoomPopover(side = null) {
+  const sides = side ? [side] : Object.keys(paneZoomControls);
+  sides.forEach((targetSide) => {
+    const controls = paneZoomControls[targetSide];
+    controls.popover.hidden = true;
+    controls.openButton.setAttribute("aria-expanded", "false");
+  });
 }
 
-function toggleZoomPopover() {
-  zoomPopover.hidden = !zoomPopover.hidden;
-  openZoomButton.setAttribute("aria-expanded", String(!zoomPopover.hidden));
+function toggleZoomPopover(side) {
+  const controls = paneZoomControls[side];
+  const willOpen = controls.popover.hidden;
+  closeZoomPopover();
+  controls.popover.hidden = !willOpen;
+  controls.openButton.setAttribute("aria-expanded", String(willOpen));
 }
 
-function updateZoomControls(zoomPercent) {
-  currentZoomPercent = zoomPercent || DEFAULT_ZOOM_PERCENT;
-  zoomValue.textContent = `${currentZoomPercent}%`;
+function updateZoomControls(side, zoomPercent) {
+  const controls = paneZoomControls[side];
+  const currentZoomPercent = zoomPercent || DEFAULT_ZOOM_PERCENT;
+  controls.value.textContent = `${currentZoomPercent}%`;
   const currentIndex = ZOOM_LEVELS.indexOf(currentZoomPercent);
   const safeIndex = currentIndex >= 0 ? currentIndex : ZOOM_LEVELS.indexOf(DEFAULT_ZOOM_PERCENT);
-  zoomOutButton.disabled = safeIndex <= 0;
-  zoomInButton.disabled = safeIndex >= ZOOM_LEVELS.length - 1;
-  zoomResetButton.disabled = currentZoomPercent === DEFAULT_ZOOM_PERCENT;
+  controls.outButton.disabled = safeIndex <= 0;
+  controls.inButton.disabled = safeIndex >= ZOOM_LEVELS.length - 1;
+  controls.resetButton.disabled = currentZoomPercent === DEFAULT_ZOOM_PERCENT;
 }
 
 function addContextMenuItem(menu, label, action, danger = false) {
@@ -141,6 +169,83 @@ function getTaskInitial(value) {
   return /[a-z]/i.test(firstCharacter) ? firstCharacter.toUpperCase() : firstCharacter;
 }
 
+function getWebViewFrameDropSide(event) {
+  const rect = splitDropOverlay.getBoundingClientRect();
+  const midpoint = rect.left + rect.width / 2;
+  return event.clientX < midpoint ? "left" : "right";
+}
+
+function setWebViewFrameDropSide(side) {
+  splitDropSide = side;
+  splitDropOverlay.classList.toggle("drop-left", side === "left");
+  splitDropOverlay.classList.toggle("drop-right", side === "right");
+}
+
+function clearWebViewFrameDropSide() {
+  splitDropSide = null;
+  splitDropOverlay.classList.remove("drop-left", "drop-right");
+}
+
+function showSplitDropOverlay() {
+  splitDropOverlay.hidden = false;
+}
+
+function hideSplitDropOverlay() {
+  clearWebViewFrameDropSide();
+  splitDropOverlay.hidden = true;
+}
+
+function bindPaneToolbarDrag(toolbar, side) {
+  toolbar.addEventListener("dragstart", (event) => {
+    if (toolbar.hidden || !webviewFrame.classList.contains("split-mode")) {
+      event.preventDefault();
+      return;
+    }
+
+    if (event.target.closest("button, .zoom-popover")) {
+      event.preventDefault();
+      return;
+    }
+
+    draggedPaneSide = side;
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/chathub-pane", side);
+    toolbar.classList.add("dragging");
+  });
+
+  toolbar.addEventListener("dragover", (event) => {
+    const sourceSide = event.dataTransfer.getData("text/chathub-pane") || draggedPaneSide;
+    if (!sourceSide || sourceSide === side) {
+      return;
+    }
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    toolbar.classList.add("drop-target");
+  });
+
+  toolbar.addEventListener("dragleave", () => {
+    toolbar.classList.remove("drop-target");
+  });
+
+  toolbar.addEventListener("drop", (event) => {
+    const sourceSide = event.dataTransfer.getData("text/chathub-pane") || draggedPaneSide;
+    toolbar.classList.remove("drop-target");
+    if (!sourceSide || sourceSide === side) {
+      return;
+    }
+
+    event.preventDefault();
+    closeZoomPopover();
+    controller.swapSplitSides();
+  });
+
+  toolbar.addEventListener("dragend", () => {
+    draggedPaneSide = null;
+    toolbar.classList.remove("dragging", "drop-target");
+  });
+}
+
 function setSidebarCollapsed(collapsed, persist = true) {
   sidebarCollapsed = Boolean(collapsed);
   appShell.classList.toggle("sidebar-collapsed", sidebarCollapsed);
@@ -163,7 +268,7 @@ const view = {
     status.className = `status ${state}`.trim();
   },
 
-  renderTasks({ groups, availableGroups, activeTaskId, activeTask }) {
+  renderTasks({ groups, availableGroups, activeTaskId, activeTask, comparisonTaskId, comparisonTask }) {
     serviceList.replaceChildren();
 
     groups.forEach((group) => {
@@ -232,7 +337,7 @@ const view = {
 
       const indicator = document.createElement("img");
       indicator.className = "group-indicator";
-      indicator.src = group.collapsed ? "./assets/icons/group-expand.svg" : "./assets/icons/group-collapse.svg";
+      indicator.src = group.collapsed ? "./assets/icons/group-collapse.svg" : "./assets/icons/group-expand.svg";
       indicator.alt = "";
       indicator.setAttribute("aria-hidden", "true");
 
@@ -258,17 +363,24 @@ const view = {
           button.dataset.task = task.id;
           button.draggable = true;
           button.classList.toggle("active", task.id === activeTaskId);
+          button.classList.toggle("comparing", task.id === comparisonTaskId);
           button.addEventListener("click", () => controller.selectTask(task.id));
           button.addEventListener("dragstart", (event) => {
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.setData("text/chathub-task", task.id);
             button.classList.add("dragging");
+            showSplitDropOverlay();
           });
           button.addEventListener("dragend", () => {
             button.classList.remove("dragging");
+            hideSplitDropOverlay();
           });
           button.addEventListener("contextmenu", (event) => {
             const items = [
+              {
+                label: "\u5728\u53f3\u4fa7\u6253\u5f00",
+                action: () => controller.openTaskInSplit(task.id),
+              },
               {
                 label: "\u6dfb\u52a0\u5230\u65b0\u5206\u7ec4",
                 action: () => controller.addTaskToNewGroup(task.id),
@@ -336,12 +448,31 @@ const view = {
 
     if (activeTask) {
       title.textContent = activeTask.title;
-      this.setZoomPercent(activeTask.zoomPercent || DEFAULT_ZOOM_PERCENT);
+      this.setZoomPercent("left", activeTask.zoomPercent || DEFAULT_ZOOM_PERCENT);
+    }
+
+    this.setZoomPercent("right", comparisonTask?.zoomPercent || DEFAULT_ZOOM_PERCENT);
+
+    this.setSplitView({
+      enabled: Boolean(comparisonTask),
+      title: comparisonTask?.title || "",
+    });
+  },
+
+  setSplitView({ enabled, title: comparisonTitle }) {
+    webviewFrame.classList.toggle("split-mode", enabled);
+    paneToolbarRight.hidden = !enabled;
+    closeLeftSplitButton.hidden = !enabled;
+    closeRightSplitButton.hidden = !enabled;
+    splitTitle.hidden = !enabled;
+    splitTitle.textContent = enabled ? `\u53f3\u4fa7\u5bf9\u7167\uff1a${comparisonTitle}` : "";
+    if (!enabled) {
+      closeZoomPopover("right");
     }
   },
 
-  setZoomPercent(zoomPercent) {
-    updateZoomControls(zoomPercent);
+  setZoomPercent(side, zoomPercent) {
+    updateZoomControls(side, zoomPercent);
   },
 
   openAddSiteModal() {
@@ -483,29 +614,46 @@ controller = new AppController({
   },
 });
 
-reloadButton.addEventListener("click", () => {
-  controller.reloadCurrent();
+reloadLeftButton.addEventListener("click", () => {
+  controller.reloadSide("left");
 });
 
-openZoomButton.addEventListener("click", (event) => {
-  event.stopPropagation();
-  toggleZoomPopover();
+reloadRightButton.addEventListener("click", () => {
+  controller.reloadSide("right");
 });
 
-zoomPopover.addEventListener("click", (event) => {
-  event.stopPropagation();
+closeLeftSplitButton.addEventListener("click", () => {
+  controller.closeSplitSide("left");
 });
 
-zoomOutButton.addEventListener("click", () => {
-  controller.stepCurrentZoom(-1);
+closeRightSplitButton.addEventListener("click", () => {
+  controller.closeSplitSide("right");
 });
 
-zoomInButton.addEventListener("click", () => {
-  controller.stepCurrentZoom(1);
-});
+bindPaneToolbarDrag(paneToolbarLeft, "left");
+bindPaneToolbarDrag(paneToolbarRight, "right");
 
-zoomResetButton.addEventListener("click", () => {
-  controller.resetCurrentZoom();
+Object.entries(paneZoomControls).forEach(([side, controls]) => {
+  controls.openButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleZoomPopover(side);
+  });
+
+  controls.popover.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  controls.outButton.addEventListener("click", () => {
+    controller.stepZoomSide(side, -1);
+  });
+
+  controls.inButton.addEventListener("click", () => {
+    controller.stepZoomSide(side, 1);
+  });
+
+  controls.resetButton.addEventListener("click", () => {
+    controller.resetZoomSide(side);
+  });
 });
 
 openSettingsButton.addEventListener("click", () => {
@@ -605,6 +753,34 @@ textPromptForm.addEventListener("submit", (event) => {
   completeTextPrompt(textPromptInput.value);
 });
 
+splitDropOverlay.addEventListener("dragover", (event) => {
+  if (!Array.from(event.dataTransfer.types).includes("text/chathub-task")) {
+    return;
+  }
+
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+  setWebViewFrameDropSide(getWebViewFrameDropSide(event));
+});
+
+splitDropOverlay.addEventListener("dragleave", (event) => {
+  if (!splitDropOverlay.contains(event.relatedTarget)) {
+    clearWebViewFrameDropSide();
+  }
+});
+
+splitDropOverlay.addEventListener("drop", (event) => {
+  const taskId = event.dataTransfer.getData("text/chathub-task");
+  if (!taskId) {
+    return;
+  }
+
+  event.preventDefault();
+  const side = splitDropSide || getWebViewFrameDropSide(event);
+  hideSplitDropOverlay();
+  controller.openTaskOnSide(taskId, side);
+});
+
 sidebar.addEventListener("contextmenu", (event) => {
   const isWorkspaceItem = event.target.closest(".service-button, .group-button");
   const isFooter = event.target.closest(".sidebar-footer");
@@ -641,12 +817,21 @@ window.addEventListener("click", () => {
 window.addEventListener("blur", () => {
   closeContextMenu();
   closeZoomPopover();
+  hideSplitDropOverlay();
 });
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeContextMenu();
     closeZoomPopover();
+    hideSplitDropOverlay();
   }
+});
+window.addEventListener("drop", hideSplitDropOverlay);
+window.addEventListener("dragend", () => {
+  hideSplitDropOverlay();
+  draggedPaneSide = null;
+  paneToolbarLeft.classList.remove("dragging", "drop-target");
+  paneToolbarRight.classList.remove("dragging", "drop-target");
 });
 
 setSidebarCollapsed(storageManager.getUiSettings().sidebarCollapsed, false);

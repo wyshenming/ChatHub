@@ -227,6 +227,12 @@ button {
   color: #1746a7;
 }
 
+.service-button.comparing:not(.active) {
+  border-color: #d4eee6;
+  background: #effaf6;
+  color: #236b56;
+}
+
 .service-button.dragging {
   opacity: 0.55;
 }
@@ -403,7 +409,7 @@ button {
   display: grid;
   min-width: 0;
   min-height: 0;
-  grid-template-rows: 74px minmax(0, 1fr);
+  grid-template-rows: 56px minmax(0, 1fr);
 }
 
 .topbar {
@@ -411,7 +417,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 22px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.86);
 }
@@ -424,8 +430,8 @@ button {
 }
 
 .topbar h2 {
-  margin-top: 4px;
-  font-size: 21px;
+  margin-top: 2px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1.2;
 }
@@ -439,7 +445,7 @@ button {
 
 .status {
   min-width: 84px;
-  padding: 7px 10px;
+  padding: 6px 10px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: #ffffff;
@@ -555,11 +561,75 @@ button {
   background: var(--danger-bg);
 }
 
+.pane-toolbar {
+  position: relative;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 40px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  background: #f8fafc;
+}
+
+.webview-frame.split-mode .pane-toolbar {
+  cursor: grab;
+}
+
+.webview-frame.split-mode .pane-toolbar:active {
+  cursor: grabbing;
+}
+
+.pane-toolbar.dragging {
+  opacity: 0.68;
+}
+
+.pane-toolbar.drop-target {
+  border-color: rgba(38, 102, 232, 0.42);
+  background: #edf4ff;
+}
+
+.pane-toolbar button,
+.pane-toolbar .zoom-control {
+  cursor: pointer;
+}
+
+.pane-toolbar[hidden] {
+  display: none;
+}
+
+.webview-frame.split-mode .pane-toolbar-left {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.webview-frame.split-mode .pane-toolbar-right {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.pane-close-button {
+  color: var(--danger);
+}
+
+.webview-frame:not(.split-mode) .pane-close-button {
+  display: none;
+}
+
 .webview-frame {
   position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 40px minmax(0, 1fr);
   min-width: 0;
   min-height: 0;
   margin: 14px;
+  gap: 0;
+  padding: 8px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -567,11 +637,89 @@ button {
   box-shadow: var(--shadow);
 }
 
+.webview-frame.split-mode {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: 40px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+
+.split-drop-overlay {
+  position: absolute;
+  inset: 48px 0 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+  background: rgba(245, 247, 251, 0.16);
+}
+
+.split-drop-overlay[hidden] {
+  display: none;
+}
+
+.split-drop-zone {
+  min-width: 0;
+  min-height: 0;
+  border: 2px dashed rgba(104, 115, 134, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  pointer-events: auto;
+}
+
+.split-drop-overlay.drop-left .split-drop-zone[data-side="left"],
+.split-drop-overlay.drop-right .split-drop-zone[data-side="right"] {
+  border-color: rgba(38, 102, 232, 0.48);
+  background: rgba(38, 102, 232, 0.12);
+}
+
 .task-webview {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.webview-frame .task-webview-primary {
+  position: relative;
+  inset: auto;
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+}
+
+.webview-frame.split-mode .task-webview-primary,
+.webview-frame.split-mode .task-webview-comparison {
+  position: relative;
+  inset: auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+}
+
+.webview-frame.split-mode .task-webview-primary {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.webview-frame.split-mode .task-webview-comparison {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.split-title {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .app-shell.sidebar-collapsed .sidebar {
