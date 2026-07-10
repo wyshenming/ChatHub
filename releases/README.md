@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.1.0
+当前版本：v1.1.1
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,11 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.1.1 维护版
+
+- 修复添加网页与修改网页弹窗：点击应用其他区域不再误关闭弹窗。
+- ChatHub 自身界面的文字默认不可选中，输入框和可编辑内容仍可正常选择、复制和粘贴。
 
 ### v1.1.0 维护版
 
@@ -71,7 +76,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.1.0
+Current version: v1.1.1
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -80,6 +85,11 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.1.1 Maintenance Release
+
+- Fixed the add/edit website dialog so clicking elsewhere in the app no longer closes it accidentally.
+- ChatHub interface text is no longer selectable by default, while input fields and editable content remain selectable for copy and paste.
 
 ### v1.1.0 Maintenance Release
 

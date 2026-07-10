@@ -712,12 +712,6 @@ cancelAddSiteButton.addEventListener("click", () => {
   controller.closeAddSite();
 });
 
-addSiteModal.addEventListener("click", (event) => {
-  if (event.target === addSiteModal) {
-    controller.closeAddSite();
-  }
-});
-
 addSiteForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (editingSiteTaskId) {

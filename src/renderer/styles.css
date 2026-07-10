@@ -32,6 +32,19 @@ body {
   color: var(--text);
 }
 
+/* Keep the application chrome from being selected while preserving editable fields. */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 button,
 input,
 select {

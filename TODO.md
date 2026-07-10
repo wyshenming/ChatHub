@@ -60,6 +60,10 @@ npm start
 - `scripts/copy-x64-app-exe.js`
 - `scripts/set-exe-metadata.js`
 
+## 最近交互验证
+
+- 待人工验证：添加网页和修改网页弹窗在点击应用其他区域时保持打开，仅可通过右上角 `×`、取消或提交操作结束。
+
 ## 打包与 exe 排查任务
 
 1. 运行：
