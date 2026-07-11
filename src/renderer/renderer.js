@@ -9,6 +9,7 @@ const serviceList = document.querySelector("#service-list");
 const appShell = document.querySelector(".app-shell");
 const sidebar = document.querySelector(".sidebar");
 const webviewFrame = document.querySelector("#webview-frame");
+const welcomeScreen = document.querySelector("#welcome-screen");
 const splitDropOverlay = document.querySelector("#split-drop-overlay");
 const paneTitleLeft = document.querySelector("#pane-title-left");
 const paneTitleRight = document.querySelector("#pane-title-right");
@@ -47,6 +48,7 @@ const settingsModal = document.querySelector("#settings-modal");
 const closeSettingsButton = document.querySelector("#close-settings");
 const openAboutButton = document.querySelector("#open-about");
 const closeBehaviorInputs = [...document.querySelectorAll("input[name='close-behavior']")];
+const startupTaskSelect = document.querySelector("#startup-task");
 const maxWebViewPoolSizeSelect = document.querySelector("#max-webview-pool-size");
 const aboutModal = document.querySelector("#about-modal");
 const closeAboutButton = document.querySelector("#close-about");
@@ -286,7 +288,7 @@ const view = {
     this.setStatus(leftLabel, leftState, "right");
   },
 
-  renderTasks({ groups, availableGroups, activeTaskId, activeTask, comparisonTaskId, comparisonTask }) {
+  renderTasks({ groups, availableGroups, activeTaskId, activeTask, comparisonTaskId, comparisonTask, startupTaskId }) {
     serviceList.replaceChildren();
 
     groups.forEach((group) => {
@@ -464,17 +466,19 @@ const view = {
       serviceList.append(groupBlock);
     });
 
+    paneTitleLeft.textContent = activeTask?.title || "";
     if (activeTask) {
-      paneTitleLeft.textContent = activeTask.title;
       this.setZoomPercent("left", activeTask.zoomPercent || DEFAULT_ZOOM_PERCENT);
     }
 
     paneTitleRight.textContent = comparisonTask?.title || "";
     this.setZoomPercent("right", comparisonTask?.zoomPercent || DEFAULT_ZOOM_PERCENT);
+    this.setStartupTaskOptions(groups.flatMap((group) => group.tasks), startupTaskId);
 
     this.setSplitView({
       enabled: Boolean(comparisonTask),
     });
+    this.setWelcomeVisible(!activeTask);
   },
 
   setSplitView({ enabled }) {
@@ -485,6 +489,28 @@ const view = {
     if (!enabled) {
       closeZoomPopover("right");
     }
+  },
+
+  setWelcomeVisible(visible) {
+    welcomeScreen.hidden = !visible;
+    webviewFrame.classList.toggle("welcome-mode", visible);
+    paneToolbarLeft.hidden = visible;
+    if (visible) {
+      paneToolbarRight.hidden = true;
+    }
+  },
+
+  setStartupTaskOptions(tasks, startupTaskId) {
+    const options = [
+      new Option("\u663e\u793a\u6b22\u8fce\u9875", ""),
+      ...tasks.map((task) => new Option(task.title, task.id)),
+    ];
+    startupTaskSelect.replaceChildren(...options);
+    startupTaskSelect.value = tasks.some((task) => task.id === startupTaskId) ? startupTaskId : "";
+  },
+
+  setStartupTask(startupTaskId) {
+    startupTaskSelect.value = startupTaskId;
   },
 
   setZoomPercent(side, zoomPercent) {
@@ -726,6 +752,10 @@ closeBehaviorInputs.forEach((input) => {
 
 maxWebViewPoolSizeSelect.addEventListener("change", () => {
   controller.setMaxWebViewPoolSize(maxWebViewPoolSizeSelect.value);
+});
+
+startupTaskSelect.addEventListener("change", () => {
+  controller.setStartupTask(startupTaskSelect.value);
 });
 
 closeAddSiteButton.addEventListener("click", () => {

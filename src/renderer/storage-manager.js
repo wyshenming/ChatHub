@@ -51,12 +51,17 @@ export class StorageManager {
     const stored = this.readJson("chathub.uiSettings.v1") || {};
     return {
       sidebarCollapsed: Boolean(stored.sidebarCollapsed),
+      startupTaskId: typeof stored.startupTaskId === "string" ? stored.startupTaskId : "",
     };
   }
 
   setUiSettings(settings) {
+    const current = this.getUiSettings();
     const nextSettings = {
-      sidebarCollapsed: Boolean(settings?.sidebarCollapsed),
+      sidebarCollapsed:
+        typeof settings?.sidebarCollapsed === "boolean" ? settings.sidebarCollapsed : current.sidebarCollapsed,
+      startupTaskId:
+        typeof settings?.startupTaskId === "string" ? settings.startupTaskId : current.startupTaskId,
     };
     this.writeJson("chathub.uiSettings.v1", nextSettings);
     return nextSettings;

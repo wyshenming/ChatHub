@@ -650,6 +650,40 @@ button {
   padding: 8px;
 }
 
+.welcome-screen {
+  position: absolute;
+  inset: 8px;
+  z-index: 8;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.welcome-screen[hidden] {
+  display: none;
+}
+
+.welcome-screen h2,
+.welcome-screen p {
+  margin: 0;
+}
+
+.welcome-screen h2 {
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.welcome-screen p {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .split-drop-overlay {
   position: absolute;
   inset: 48px 0 0;

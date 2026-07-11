@@ -280,6 +280,10 @@ export class TaskManager {
     }
   }
 
+  clearActive() {
+    this.activeTaskId = null;
+  }
+
   add(task) {
     this.tasks = [...this.tasks, task];
     this.activeTaskId = task.id;

@@ -14,8 +14,19 @@ export class AppController {
 
   start() {
     this.applyPerformanceSettings();
+    const { startupTaskId } = this.storageManager.getUiSettings();
+    const startupTask = this.taskManager.get(startupTaskId);
+
+    if (startupTask) {
+      this.taskManager.setActive(startupTask.id);
+    } else {
+      this.taskManager.clearActive();
+    }
+
     this.emitTasks();
-    this.webViewManager.loadTask(this.taskManager.active());
+    if (startupTask) {
+      this.webViewManager.loadTask(startupTask);
+    }
   }
 
   handleWebViewLoading(taskId) {
@@ -55,6 +66,7 @@ export class AppController {
       activeTask: this.taskManager.active(),
       comparisonTaskId: this.comparisonTaskId,
       comparisonTask: this.taskManager.get(this.comparisonTaskId),
+      startupTaskId: this.storageManager.getUiSettings().startupTaskId,
     });
   }
 
@@ -95,6 +107,11 @@ export class AppController {
     const task = this.taskManager.get(taskId);
     const activeTask = this.taskManager.active();
     if (!task) {
+      return;
+    }
+
+    if (!activeTask) {
+      this.selectTask(task.id);
       return;
     }
 
@@ -378,6 +395,14 @@ export class AppController {
     const settings = this.storageManager.setPerformanceSettings({ maxWebViewPoolSize });
     this.view.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
     this.webViewManager.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
+  }
+
+  setStartupTask(startupTaskId) {
+    const task = this.taskManager.get(startupTaskId);
+    const settings = this.storageManager.setUiSettings({
+      startupTaskId: task?.id || "",
+    });
+    this.view.setStartupTask(settings.startupTaskId);
   }
 
   openAddSite() {

@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.2.0
+当前版本：v1.2.1
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,12 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.1 维护版
+
+- 默认启动时显示欢迎页，不再自动加载 AI 页面或创建 WebView。
+- 可在设置中选择下次启动时显示欢迎页或自动打开指定页面。
+- 修复选择任务后欢迎页仍覆盖页面的问题。
 
 ### v1.2.0 维护版
 
@@ -83,7 +89,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.2.0
+Current version: v1.2.1
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -92,6 +98,12 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.1 Maintenance Release
+
+- Shows a welcome screen by default on startup without automatically loading an AI page or creating a WebView.
+- Adds a setting to choose whether the next launch shows the welcome screen or opens a selected page.
+- Fixed the welcome screen remaining over the page after a task was selected.
 
 ### v1.2.0 Maintenance Release
 
