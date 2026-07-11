@@ -43,6 +43,7 @@ npm run dist
 
 每次发布 GitHub Release 时必须遵守：
 
+- 用户要求“打包提交”时，默认同步创建对应的 GitHub Release，除非明确说明只提交仓库。
 - 不允许覆盖已有 Release。
 - 必须创建全新的 Release。
 - 每次发布必须生成新的 version tag，版本号顺延，除非用户特别说明版本号。

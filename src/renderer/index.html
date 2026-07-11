@@ -31,69 +31,76 @@
       </aside>
 
       <section class="workspace">
-        <header class="topbar">
-          <div>
-            <div class="current-label">&#24403;&#21069;&#20219;&#21153;</div>
-            <h2 id="current-title">ChatGPT</h2>
-            <div class="split-title" id="split-title" hidden></div>
-          </div>
-          <div class="topbar-actions">
-            <div class="status" id="status">&#27491;&#22312;&#21152;&#36733;</div>
-          </div>
-        </header>
-
         <section class="webview-frame" id="webview-frame" aria-label="&#32593;&#39029;&#35270;&#22270;">
           <div class="pane-toolbar pane-toolbar-left" id="pane-toolbar-left" draggable="true" data-side="left">
-            <div class="zoom-control">
-              <button class="quick-action-button icon-only zoom-toggle" type="button" id="open-zoom-left" title="&#39029;&#38754;&#32553;&#25918;" aria-label="&#39029;&#38754;&#32553;&#25918;" aria-expanded="false">
-                <img class="button-icon" src="./assets/icons/zoom-in.svg" alt="" aria-hidden="true" />
+            <div class="pane-toolbar-start">
+              <button class="quick-action-button icon-only pane-back-button" type="button" id="back-left" title="&#36820;&#22238;&#19978;&#19968;&#39029;" aria-label="&#36820;&#22238;&#19978;&#19968;&#39029;">
+                <img class="button-icon" src="./assets/icons/arrowleft.svg" alt="" aria-hidden="true" />
               </button>
-              <div class="zoom-popover" id="zoom-popover-left" hidden>
-                <button class="zoom-step-button" type="button" id="zoom-out-left" aria-label="&#32553;&#23567;">
-                  <img class="button-icon" src="./assets/icons/minus.svg" alt="" aria-hidden="true" />
-                </button>
-                <span class="zoom-value" id="zoom-value-left">100%</span>
-                <button class="zoom-step-button" type="button" id="zoom-in-left" aria-label="&#25918;&#22823;">
-                  <img class="button-icon" src="./assets/icons/plus.svg" alt="" aria-hidden="true" />
-                </button>
-                <button class="zoom-reset-button" type="button" id="zoom-reset-left">
-                  <img class="button-icon" src="./assets/icons/reset.svg" alt="" aria-hidden="true" />
-                  <span>&#37325;&#32622;</span>
-                </button>
-              </div>
             </div>
-            <button class="quick-action-button icon-only" type="button" id="reload-left" title="&#21047;&#26032;&#24038;&#20391;&#39029;" aria-label="&#21047;&#26032;&#24038;&#20391;&#39029;">
-              <img class="button-icon" src="./assets/icons/refresh.svg" alt="" aria-hidden="true" />
-            </button>
-            <button class="quick-action-button icon-only pane-close-button" type="button" id="close-left-split" title="&#20851;&#38381;&#24038;&#20391;" aria-label="&#20851;&#38381;&#24038;&#20391;" hidden>
-              <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
-            </button>
+            <div class="pane-title" id="pane-title-left">ChatGPT</div>
+            <div class="pane-toolbar-actions">
+              <div class="status" id="status">&#27491;&#22312;&#21152;&#36733;</div>
+              <div class="zoom-control">
+                <button class="quick-action-button icon-only zoom-toggle" type="button" id="open-zoom-left" title="&#39029;&#38754;&#32553;&#25918;" aria-label="&#39029;&#38754;&#32553;&#25918;" aria-expanded="false">
+                  <img class="button-icon" src="./assets/icons/zoom-in.svg" alt="" aria-hidden="true" />
+                </button>
+                <div class="zoom-popover" id="zoom-popover-left" hidden>
+                  <button class="zoom-step-button" type="button" id="zoom-out-left" aria-label="&#32553;&#23567;">
+                    <img class="button-icon" src="./assets/icons/minus.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <span class="zoom-value" id="zoom-value-left">100%</span>
+                  <button class="zoom-step-button" type="button" id="zoom-in-left" aria-label="&#25918;&#22823;">
+                    <img class="button-icon" src="./assets/icons/plus.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <button class="zoom-reset-button" type="button" id="zoom-reset-left">
+                    <img class="button-icon" src="./assets/icons/reset.svg" alt="" aria-hidden="true" />
+                    <span>&#37325;&#32622;</span>
+                  </button>
+                </div>
+              </div>
+              <button class="quick-action-button icon-only" type="button" id="reload-left" title="&#21047;&#26032;&#24038;&#20391;&#39029;" aria-label="&#21047;&#26032;&#24038;&#20391;&#39029;">
+                <img class="button-icon" src="./assets/icons/refresh.svg" alt="" aria-hidden="true" />
+              </button>
+              <button class="quick-action-button icon-only pane-close-button" type="button" id="close-left-split" title="&#20851;&#38381;&#24038;&#20391;" aria-label="&#20851;&#38381;&#24038;&#20391;" hidden>
+                <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
+              </button>
+            </div>
           </div>
           <div class="pane-toolbar pane-toolbar-right" id="pane-toolbar-right" draggable="true" data-side="right" hidden>
-            <div class="zoom-control">
-              <button class="quick-action-button icon-only zoom-toggle" type="button" id="open-zoom-right" title="&#39029;&#38754;&#32553;&#25918;" aria-label="&#39029;&#38754;&#32553;&#25918;" aria-expanded="false">
-                <img class="button-icon" src="./assets/icons/zoom-in.svg" alt="" aria-hidden="true" />
+            <div class="pane-toolbar-start">
+              <button class="quick-action-button icon-only pane-back-button" type="button" id="back-right" title="&#36820;&#22238;&#19978;&#19968;&#39029;" aria-label="&#36820;&#22238;&#19978;&#19968;&#39029;">
+                <img class="button-icon" src="./assets/icons/arrowleft.svg" alt="" aria-hidden="true" />
               </button>
-              <div class="zoom-popover" id="zoom-popover-right" hidden>
-                <button class="zoom-step-button" type="button" id="zoom-out-right" aria-label="&#32553;&#23567;">
-                  <img class="button-icon" src="./assets/icons/minus.svg" alt="" aria-hidden="true" />
-                </button>
-                <span class="zoom-value" id="zoom-value-right">100%</span>
-                <button class="zoom-step-button" type="button" id="zoom-in-right" aria-label="&#25918;&#22823;">
-                  <img class="button-icon" src="./assets/icons/plus.svg" alt="" aria-hidden="true" />
-                </button>
-                <button class="zoom-reset-button" type="button" id="zoom-reset-right">
-                  <img class="button-icon" src="./assets/icons/reset.svg" alt="" aria-hidden="true" />
-                  <span>&#37325;&#32622;</span>
-                </button>
-              </div>
             </div>
-            <button class="quick-action-button icon-only" type="button" id="reload-right" title="&#21047;&#26032;&#21491;&#20391;&#39029;" aria-label="&#21047;&#26032;&#21491;&#20391;&#39029;">
-              <img class="button-icon" src="./assets/icons/refresh.svg" alt="" aria-hidden="true" />
-            </button>
-            <button class="quick-action-button icon-only pane-close-button" type="button" id="close-right-split" title="&#20851;&#38381;&#21491;&#20391;" aria-label="&#20851;&#38381;&#21491;&#20391;">
-              <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
-            </button>
+            <div class="pane-title" id="pane-title-right"></div>
+            <div class="pane-toolbar-actions">
+              <div class="status" id="status-right">&#27491;&#22312;&#21152;&#36733;</div>
+              <div class="zoom-control">
+                <button class="quick-action-button icon-only zoom-toggle" type="button" id="open-zoom-right" title="&#39029;&#38754;&#32553;&#25918;" aria-label="&#39029;&#38754;&#32553;&#25918;" aria-expanded="false">
+                  <img class="button-icon" src="./assets/icons/zoom-in.svg" alt="" aria-hidden="true" />
+                </button>
+                <div class="zoom-popover" id="zoom-popover-right" hidden>
+                  <button class="zoom-step-button" type="button" id="zoom-out-right" aria-label="&#32553;&#23567;">
+                    <img class="button-icon" src="./assets/icons/minus.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <span class="zoom-value" id="zoom-value-right">100%</span>
+                  <button class="zoom-step-button" type="button" id="zoom-in-right" aria-label="&#25918;&#22823;">
+                    <img class="button-icon" src="./assets/icons/plus.svg" alt="" aria-hidden="true" />
+                  </button>
+                  <button class="zoom-reset-button" type="button" id="zoom-reset-right">
+                    <img class="button-icon" src="./assets/icons/reset.svg" alt="" aria-hidden="true" />
+                    <span>&#37325;&#32622;</span>
+                  </button>
+                </div>
+              </div>
+              <button class="quick-action-button icon-only" type="button" id="reload-right" title="&#21047;&#26032;&#21491;&#20391;&#39029;" aria-label="&#21047;&#26032;&#21491;&#20391;&#39029;">
+                <img class="button-icon" src="./assets/icons/refresh.svg" alt="" aria-hidden="true" />
+              </button>
+              <button class="quick-action-button icon-only pane-close-button" type="button" id="close-right-split" title="&#20851;&#38381;&#21491;&#20391;" aria-label="&#20851;&#38381;&#21491;&#20391;">
+                <img class="button-icon" src="./assets/icons/close.svg" alt="" aria-hidden="true" />
+              </button>
+            </div>
           </div>
           <div class="split-drop-overlay" id="split-drop-overlay" hidden>
             <div class="split-drop-zone" data-side="left"></div>

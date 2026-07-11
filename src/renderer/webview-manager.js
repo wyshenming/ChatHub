@@ -439,6 +439,24 @@ export class WebViewManager {
     record?.webview.reload();
   }
 
+  goBackTask(taskId) {
+    const record = this.webviewPool.get(taskId);
+    if (!record) {
+      return false;
+    }
+
+    try {
+      if (!record.webview.canGoBack()) {
+        return false;
+      }
+
+      record.webview.goBack();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   setMaxWebViewPoolSize(value) {
     const parsed = Number(value);
     this.maxWebViewPoolSize = [2, 3, 4, 5, 6].includes(parsed) ? parsed : 4;

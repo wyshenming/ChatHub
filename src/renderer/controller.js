@@ -23,7 +23,7 @@ export class AppController {
       this.taskManager.mark(taskId, TaskStatus.RUNNING);
       this.emitTasks();
     }
-    this.view.setStatus(text.loading);
+    this.view.setStatus(text.loading, "", this.getTaskSide(taskId));
   }
 
   handleWebViewReady(taskId) {
@@ -31,7 +31,7 @@ export class AppController {
       this.taskManager.mark(taskId, TaskStatus.RUNNING);
       this.emitTasks();
     }
-    this.view.setStatus(text.ready, "ready");
+    this.view.setStatus(text.ready, "ready", this.getTaskSide(taskId));
   }
 
   handleWebViewFailed(taskId) {
@@ -39,7 +39,11 @@ export class AppController {
       this.taskManager.mark(taskId, TaskStatus.PAUSED);
       this.emitTasks();
     }
-    this.view.setStatus(text.loadFailed, "error");
+    this.view.setStatus(text.loadFailed, "error", this.getTaskSide(taskId));
+  }
+
+  getTaskSide(taskId) {
+    return taskId && taskId === this.comparisonTaskId ? "right" : "left";
   }
 
   emitTasks() {
@@ -100,6 +104,7 @@ export class AppController {
     }
 
     this.comparisonTaskId = task.id;
+    this.view.setStatus(text.loading, "", "right");
     this.webViewManager.loadComparisonTask(task);
     this.emitTasks();
   }
@@ -125,6 +130,18 @@ export class AppController {
       if (task.id !== activeTask?.id) {
         this.openTaskInSplit(task.id);
       }
+      return;
+    }
+
+    if (!this.comparisonTaskId && activeTask && task.id !== activeTask.id) {
+      this.view.copyStatus("left", "right");
+      this.view.setStatus(text.switching);
+      await this.persistCurrentTaskAsPaused();
+      this.taskManager.setActive(task.id);
+      this.comparisonTaskId = activeTask.id;
+      this.webViewManager.loadTask(task);
+      this.webViewManager.loadComparisonTask(activeTask);
+      this.emitTasks();
       return;
     }
 
@@ -155,6 +172,7 @@ export class AppController {
     this.taskManager.setActive(this.comparisonTaskId);
     this.comparisonTaskId = previousActiveTaskId;
     this.webViewManager.swapPrimaryAndComparison();
+    this.view.swapPaneStatuses();
     this.emitTasks();
   }
 
@@ -182,6 +200,7 @@ export class AppController {
       this.taskManager.setActive(nextTask.id);
       this.comparisonTaskId = null;
       this.webViewManager.promoteComparisonToPrimary();
+      this.view.copyStatus("right", "left");
       this.emitTasks();
       return;
     }
@@ -201,6 +220,15 @@ export class AppController {
     }
 
     this.webViewManager.reloadTask(task.id);
+  }
+
+  goBackSide(side) {
+    const task = this.taskForSide(side);
+    if (!task) {
+      return;
+    }
+
+    this.webViewManager.goBackTask(task.id);
   }
 
   async reloadTask(taskId) {

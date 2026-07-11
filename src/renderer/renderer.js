@@ -10,11 +10,14 @@ const appShell = document.querySelector(".app-shell");
 const sidebar = document.querySelector(".sidebar");
 const webviewFrame = document.querySelector("#webview-frame");
 const splitDropOverlay = document.querySelector("#split-drop-overlay");
-const title = document.querySelector("#current-title");
-const splitTitle = document.querySelector("#split-title");
+const paneTitleLeft = document.querySelector("#pane-title-left");
+const paneTitleRight = document.querySelector("#pane-title-right");
 const status = document.querySelector("#status");
+const statusRight = document.querySelector("#status-right");
 const paneToolbarLeft = document.querySelector("#pane-toolbar-left");
 const paneToolbarRight = document.querySelector("#pane-toolbar-right");
+const backLeftButton = document.querySelector("#back-left");
+const backRightButton = document.querySelector("#back-right");
 const reloadLeftButton = document.querySelector("#reload-left");
 const reloadRightButton = document.querySelector("#reload-right");
 const closeLeftSplitButton = document.querySelector("#close-left-split");
@@ -263,9 +266,24 @@ function setSidebarCollapsed(collapsed, persist = true) {
 }
 
 const view = {
-  setStatus(label, state = "") {
-    status.textContent = label;
-    status.className = `status ${state}`.trim();
+  setStatus(label, state = "", side = "left") {
+    const target = side === "right" ? statusRight : status;
+    target.textContent = label;
+    target.className = `status ${state}`.trim();
+  },
+
+  copyStatus(sourceSide, targetSide) {
+    const source = sourceSide === "right" ? statusRight : status;
+    this.setStatus(source.textContent, source.classList.contains("ready") ? "ready" : source.classList.contains("error") ? "error" : "", targetSide);
+  },
+
+  swapPaneStatuses() {
+    const leftLabel = status.textContent;
+    const leftState = status.classList.contains("ready") ? "ready" : status.classList.contains("error") ? "error" : "";
+    const rightLabel = statusRight.textContent;
+    const rightState = statusRight.classList.contains("ready") ? "ready" : statusRight.classList.contains("error") ? "error" : "";
+    this.setStatus(rightLabel, rightState, "left");
+    this.setStatus(leftLabel, leftState, "right");
   },
 
   renderTasks({ groups, availableGroups, activeTaskId, activeTask, comparisonTaskId, comparisonTask }) {
@@ -447,25 +465,23 @@ const view = {
     });
 
     if (activeTask) {
-      title.textContent = activeTask.title;
+      paneTitleLeft.textContent = activeTask.title;
       this.setZoomPercent("left", activeTask.zoomPercent || DEFAULT_ZOOM_PERCENT);
     }
 
+    paneTitleRight.textContent = comparisonTask?.title || "";
     this.setZoomPercent("right", comparisonTask?.zoomPercent || DEFAULT_ZOOM_PERCENT);
 
     this.setSplitView({
       enabled: Boolean(comparisonTask),
-      title: comparisonTask?.title || "",
     });
   },
 
-  setSplitView({ enabled, title: comparisonTitle }) {
+  setSplitView({ enabled }) {
     webviewFrame.classList.toggle("split-mode", enabled);
     paneToolbarRight.hidden = !enabled;
     closeLeftSplitButton.hidden = !enabled;
     closeRightSplitButton.hidden = !enabled;
-    splitTitle.hidden = !enabled;
-    splitTitle.textContent = enabled ? `\u53f3\u4fa7\u5bf9\u7167\uff1a${comparisonTitle}` : "";
     if (!enabled) {
       closeZoomPopover("right");
     }
@@ -620,6 +636,14 @@ reloadLeftButton.addEventListener("click", () => {
 
 reloadRightButton.addEventListener("click", () => {
   controller.reloadSide("right");
+});
+
+backLeftButton.addEventListener("click", () => {
+  controller.goBackSide("left");
+});
+
+backRightButton.addEventListener("click", () => {
+  controller.goBackSide("right");
 });
 
 closeLeftSplitButton.addEventListener("click", () => {

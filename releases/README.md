@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.1.1
+当前版本：v1.2.0
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,13 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.0 维护版
+
+- 统一单页面拖拽分屏行为：拖到左侧时新页面在左、原页面保留在右；拖到右侧时反之。
+- 分屏左右页面分别显示加载状态，交换和关闭单侧时状态会跟随页面。
+- 移除页面顶部任务标题区，将任务名放入对应工具栏中央。
+- 工具栏新增返回上一页按钮，并替换为专用返回图标。
 
 ### v1.1.1 维护版
 
@@ -76,7 +83,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.1.1
+Current version: v1.2.0
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -85,6 +92,13 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.0 Maintenance Release
+
+- Unified single-page drag-to-split behavior: dropping left puts the new page on the left and keeps the original page on the right, with the inverse behavior on the right.
+- Split panes now show independent loading states that follow their pages when swapping or closing a pane.
+- Removed the page-level task header and moved each task name to the center of its own toolbar.
+- Added a back-navigation button to the toolbar with a dedicated back icon.
 
 ### v1.1.1 Maintenance Release
 
