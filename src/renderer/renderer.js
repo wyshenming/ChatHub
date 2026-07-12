@@ -174,6 +174,11 @@ function getTaskInitial(value) {
   return /[a-z]/i.test(firstCharacter) ? firstCharacter.toUpperCase() : firstCharacter;
 }
 
+function truncateTabTitle(value, maxLength = 14) {
+  const characters = Array.from(String(value || "").trim());
+  return characters.length > maxLength ? `${characters.slice(0, maxLength).join("")}...` : characters.join("");
+}
+
 function getWebViewFrameDropSide(event) {
   const rect = splitDropOverlay.getBoundingClientRect();
   const midpoint = rect.left + rect.width / 2;
@@ -288,7 +293,17 @@ const view = {
     this.setStatus(leftLabel, leftState, "right");
   },
 
-  renderTasks({ groups, availableGroups, activeTaskId, activeTask, comparisonTaskId, comparisonTask, startupTaskId }) {
+  renderTasks({
+    groups,
+    availableGroups,
+    activeTaskId,
+    activeTask,
+    comparisonTaskId,
+    comparisonTask,
+    primaryTabs,
+    comparisonTabs,
+    startupTaskId,
+  }) {
     serviceList.replaceChildren();
 
     groups.forEach((group) => {
@@ -466,12 +481,12 @@ const view = {
       serviceList.append(groupBlock);
     });
 
-    paneTitleLeft.textContent = activeTask?.title || "";
+    this.renderWebViewTabs("left", primaryTabs);
     if (activeTask) {
       this.setZoomPercent("left", activeTask.zoomPercent || DEFAULT_ZOOM_PERCENT);
     }
 
-    paneTitleRight.textContent = comparisonTask?.title || "";
+    this.renderWebViewTabs("right", comparisonTabs);
     this.setZoomPercent("right", comparisonTask?.zoomPercent || DEFAULT_ZOOM_PERCENT);
     this.setStartupTaskOptions(groups.flatMap((group) => group.tasks), startupTaskId);
 
@@ -489,6 +504,41 @@ const view = {
     if (!enabled) {
       closeZoomPopover("right");
     }
+  },
+
+  renderWebViewTabs(side, { tabs = [], activeTabId = null } = {}) {
+    const container = side === "right" ? paneTitleRight : paneTitleLeft;
+    container.replaceChildren();
+
+    tabs.forEach((tab) => {
+      const tabButton = document.createElement("button");
+      tabButton.className = "webpage-tab";
+      tabButton.type = "button";
+      tabButton.classList.toggle("active", tab.id === activeTabId);
+      tabButton.title = tab.title;
+      tabButton.addEventListener("click", (event) => {
+        if (tab.closable && event.target.closest(".webpage-tab-close")) {
+          controller.closeWebViewTab(side, tab.id);
+          return;
+        }
+
+        controller.selectWebViewTab(side, tab.id);
+      });
+
+      const tabTitle = document.createElement("span");
+      tabTitle.textContent = truncateTabTitle(tab.title);
+      tabButton.append(tabTitle);
+
+      if (tab.closable) {
+        const closeButton = document.createElement("span");
+        closeButton.className = "webpage-tab-close";
+        closeButton.textContent = "\u00d7";
+        closeButton.setAttribute("aria-hidden", "true");
+        tabButton.append(closeButton);
+      }
+
+      container.append(tabButton);
+    });
   },
 
   setWelcomeVisible(visible) {
@@ -642,6 +692,12 @@ const webViewManager = new WebViewManager(webviewFrame, {
   onLoading: (taskId) => controller?.handleWebViewLoading(taskId),
   onReady: (taskId) => controller?.handleWebViewReady(taskId),
   onFailed: (taskId) => controller?.handleWebViewFailed(taskId),
+  onOpenTab: (taskId, url) => controller?.openWebViewTab(taskId, url),
+  onTabsChanged: (taskId) => controller?.handleWebViewTabsChanged(taskId),
+});
+
+window.aiChatHub?.onWebViewOpenTab?.(({ webContentsId, url }) => {
+  webViewManager.openTabForWebContents(webContentsId, url);
 });
 
 controller = new AppController({

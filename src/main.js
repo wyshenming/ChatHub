@@ -355,12 +355,24 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, "renderer", "index.html"));
 
   mainWindow.on("close", handleWindowClose);
+}
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+app.on("web-contents-created", (_event, contents) => {
+  contents.setWindowOpenHandler(({ url }) => {
+    if (contents.getType() === "webview") {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("webview-open-tab", {
+          webContentsId: contents.id,
+          url,
+        });
+      }
+      return { action: "deny" };
+    }
+
     shell.openExternal(url);
     return { action: "deny" };
   });
-}
+});
 
 if (isQuitForUninstall && hasSingleInstanceLock) {
   app.whenReady().then(quitForUninstall);

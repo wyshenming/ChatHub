@@ -66,8 +66,60 @@ export class AppController {
       activeTask: this.taskManager.active(),
       comparisonTaskId: this.comparisonTaskId,
       comparisonTask: this.taskManager.get(this.comparisonTaskId),
+      primaryTabs: this.webViewManager.getTaskTabs(this.taskManager.activeTaskId),
+      comparisonTabs: this.webViewManager.getTaskTabs(this.comparisonTaskId),
       startupTaskId: this.storageManager.getUiSettings().startupTaskId,
     });
+  }
+
+  handleWebViewTabsChanged(taskId) {
+    if (taskId === this.taskManager.activeTaskId || taskId === this.comparisonTaskId) {
+      this.emitTasks();
+    }
+  }
+
+  openWebViewTab(taskId, url) {
+    const task = this.taskManager.get(taskId);
+    if (!task || !this.webViewManager.openTaskTab(taskId, url)) {
+      return;
+    }
+
+    this.emitTasks();
+    this.loadTaskTab(task);
+  }
+
+  selectWebViewTab(side, tabId) {
+    const task = this.taskForSide(side);
+    if (!task || !this.webViewManager.activateTaskTab(task.id, tabId)) {
+      return;
+    }
+
+    this.emitTasks();
+    this.loadTaskTab(task);
+  }
+
+  closeWebViewTab(side, tabId) {
+    const task = this.taskForSide(side);
+    if (!task) {
+      return;
+    }
+
+    const shouldLoadNextTab = this.webViewManager.closeTaskTab(task.id, tabId);
+    this.emitTasks();
+    if (shouldLoadNextTab) {
+      this.loadTaskTab(task);
+    }
+  }
+
+  loadTaskTab(task) {
+    if (task.id === this.taskManager.activeTaskId) {
+      this.webViewManager.loadTask(task);
+      return;
+    }
+
+    if (task.id === this.comparisonTaskId) {
+      this.webViewManager.loadComparisonTask(task);
+    }
   }
 
   async persistCurrentTaskAsPaused() {

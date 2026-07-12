@@ -544,9 +544,9 @@ button {
 .pane-toolbar {
   position: relative;
   z-index: 9;
-  display: grid;
-  grid-template-columns: minmax(32px, 1fr) minmax(0, auto) minmax(32px, 1fr);
+  display: flex;
   align-items: center;
+  gap: 8px;
   min-height: 40px;
   padding: 4px 6px;
   border: 1px solid var(--border);
@@ -585,23 +585,75 @@ button {
 }
 
 .pane-toolbar-start {
-  justify-self: start;
+  flex: 0 0 auto;
 }
 
 .pane-toolbar-actions {
-  justify-self: end;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .pane-title {
+  display: flex;
+  align-items: stretch;
   min-width: 0;
-  max-width: 38vw;
+  flex: 1 1 auto;
+  gap: 6px;
   overflow: hidden;
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
+}
+
+.webpage-tab {
+  display: inline-flex;
+  min-width: 74px;
+  max-width: 170px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #eef2f7;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.webpage-tab > span:first-child {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.webpage-tab.active {
+  border-color: #c7d3e3;
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(23, 32, 51, 0.08);
+}
+
+.webpage-tab:hover:not(.active) {
+  background: #e4eaf2;
+  color: var(--text);
+}
+
+.webpage-tab-close {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.webpage-tab-close:hover {
+  background: #e1e7ef;
+  color: var(--text);
 }
 
 .pane-toolbar[hidden] {

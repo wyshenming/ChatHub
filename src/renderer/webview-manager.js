@@ -34,6 +34,15 @@ export class WebViewManager {
       loadedUrl: "",
       currentUrl: "",
       targetUrl: task.url || task.initialUrl || "",
+      tabs: [
+        {
+          id: "root",
+          title: task.title || task.name || task.id,
+          url: task.url || task.initialUrl || "",
+          closable: false,
+        },
+      ],
+      activeTabId: "root",
       zoomPercent: task.zoomPercent || DEFAULT_ZOOM_PERCENT,
       pendingTask: null,
       destroyLogged: false,
@@ -57,6 +66,133 @@ export class WebViewManager {
     );
 
     return record;
+  }
+
+  getTaskTabs(taskId) {
+    const record = this.webviewPool.get(taskId);
+    if (!record) {
+      return { tabs: [], activeTabId: null };
+    }
+
+    return {
+      tabs: record.tabs.map((tab) => ({ ...tab })),
+      activeTabId: record.activeTabId,
+    };
+  }
+
+  getActiveTab(record) {
+    return record?.tabs.find((tab) => tab.id === record.activeTabId) || record?.tabs[0] || null;
+  }
+
+  getTargetUrl(task, record) {
+    const tab = this.getActiveTab(record);
+    return tab?.url || task.url || task.initialUrl || "";
+  }
+
+  openTaskTab(taskId, url) {
+    const record = this.webviewPool.get(taskId);
+    if (!record || !this.isNavigableUrl(url)) {
+      return false;
+    }
+
+    const tab = {
+      id: `tab-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      title: this.titleFromUrl(url),
+      url,
+      closable: true,
+    };
+    record.tabs.push(tab);
+    record.activeTabId = tab.id;
+    this.callbacks.onTabsChanged?.(taskId);
+    return true;
+  }
+
+  openTabForWebContents(webContentsId, url) {
+    const record = [...this.webviewPool.values()].find((candidate) => {
+      try {
+        return candidate.webview.getWebContentsId() === webContentsId;
+      } catch {
+        return false;
+      }
+    });
+
+    if (!record || !this.isNavigableUrl(url)) {
+      return false;
+    }
+
+    this.callbacks.onOpenTab?.(record.taskId, url);
+    return true;
+  }
+
+  activateTaskTab(taskId, tabId) {
+    const record = this.webviewPool.get(taskId);
+    if (!record?.tabs.some((tab) => tab.id === tabId)) {
+      return false;
+    }
+
+    record.activeTabId = tabId;
+    this.callbacks.onTabsChanged?.(taskId);
+    return true;
+  }
+
+  closeTaskTab(taskId, tabId) {
+    const record = this.webviewPool.get(taskId);
+    const tabIndex = record?.tabs.findIndex((tab) => tab.id === tabId) ?? -1;
+    const tab = record?.tabs[tabIndex];
+    if (!record || !tab || !tab.closable) {
+      return false;
+    }
+
+    const wasActive = record.activeTabId === tabId;
+    record.tabs.splice(tabIndex, 1);
+    if (wasActive) {
+      record.activeTabId = record.tabs[Math.max(0, tabIndex - 1)]?.id || "root";
+    }
+    this.callbacks.onTabsChanged?.(taskId);
+    return wasActive;
+  }
+
+  updateActiveTabUrl(record, url) {
+    if (!this.isNavigableUrl(url)) {
+      return;
+    }
+
+    const tab = this.getActiveTab(record);
+    if (!tab || tab.url === url) {
+      return;
+    }
+
+    tab.url = url;
+    record.loadedUrl = url;
+    this.callbacks.onTabsChanged?.(record.taskId);
+  }
+
+  updateActiveTabTitle(record, title) {
+    const tab = this.getActiveTab(record);
+    const normalizedTitle = String(title || "").trim();
+    if (!tab || !normalizedTitle || tab.title === normalizedTitle) {
+      return;
+    }
+
+    tab.title = normalizedTitle;
+    this.callbacks.onTabsChanged?.(record.taskId);
+  }
+
+  titleFromUrl(url) {
+    try {
+      return new URL(url).hostname.replace(/^www\./i, "") || url;
+    } catch {
+      return url;
+    }
+  }
+
+  isNavigableUrl(url) {
+    try {
+      const protocol = new URL(url).protocol;
+      return protocol === "http:" || protocol === "https:";
+    } catch {
+      return false;
+    }
   }
 
   bindWebViewEvents(record) {
@@ -100,9 +236,21 @@ export class WebViewManager {
       record.currentUrl = this.safeGetUrl(record);
       if (record.currentUrl && record.currentUrl !== "about:blank") {
         record.hasLoaded = true;
-        record.loadedUrl = record.targetUrl;
+        record.loadedUrl = record.currentUrl;
       }
       this.logFinishLoad(record);
+    });
+
+    record.webview.addEventListener("did-navigate", (event) => {
+      this.updateActiveTabUrl(record, event.url);
+    });
+
+    record.webview.addEventListener("did-navigate-in-page", (event) => {
+      this.updateActiveTabUrl(record, event.url);
+    });
+
+    record.webview.addEventListener("page-title-updated", (event) => {
+      this.updateActiveTabTitle(record, event.title);
     });
 
     record.webview.addEventListener("did-fail-load", (event) => {
@@ -135,7 +283,7 @@ export class WebViewManager {
     const isSwitch = previousTaskId !== null && previousTaskId !== task.id;
     const existingRecord = this.webviewPool.get(task.id);
     const record = existingRecord || this.createWebViewRecord(task);
-    const targetUrl = task.url || task.initialUrl || "";
+    const targetUrl = this.getTargetUrl(task, record);
     const currentUrl = this.safeGetUrl(record);
     const configuredUrlChanged = Boolean(existingRecord) && !this.isSameUrl(record.loadedUrl || record.targetUrl, targetUrl);
     const waitForExistingLoad = !record.hasLoaded && record.isLoadingTarget && !configuredUrlChanged;
@@ -260,7 +408,7 @@ export class WebViewManager {
 
     const existingRecord = this.webviewPool.get(task.id);
     const record = existingRecord || this.createWebViewRecord(task);
-    const targetUrl = task.url || task.initialUrl || "";
+    const targetUrl = this.getTargetUrl(task, record);
     const currentUrl = this.safeGetUrl(record);
     const configuredUrlChanged = Boolean(existingRecord) && !this.isSameUrl(record.loadedUrl || record.targetUrl, targetUrl);
     const waitForExistingLoad = !record.hasLoaded && record.isLoadingTarget && !configuredUrlChanged;
@@ -359,7 +507,7 @@ export class WebViewManager {
       return;
     }
 
-    const targetUrl = task.url || task.initialUrl || "";
+    const targetUrl = this.getTargetUrl(task, record);
     const currentUrl = this.safeGetUrl(record);
     const configuredUrlChanged = !this.isSameUrl(record.loadedUrl || record.targetUrl, targetUrl);
     const waitForExistingLoad = !record.hasLoaded && record.isLoadingTarget && !configuredUrlChanged;

@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.2.1
+当前版本：v1.2.2
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,12 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.2 维护版
+
+- 拦截网页打开新窗口的请求，改为在当前任务工具栏中创建分页。
+- 新增分页切换与关闭，仍复用当前任务的 WebView，不增加常驻窗口。
+- 分页改为左对齐的紧凑样式，标题最多显示 14 个字符，完整标题可悬停查看。
 
 ### v1.2.1 维护版
 
@@ -89,7 +95,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.2.1
+Current version: v1.2.2
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -98,6 +104,12 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.2 Maintenance Release
+
+- Intercepts web page requests to open new windows and creates a tab in the current task toolbar instead.
+- Adds tab switching and closing while reusing the current task WebView without extra persistent windows.
+- Refined tabs into a compact left-aligned style; titles show up to 14 characters with the full title available on hover.
 
 ### v1.2.1 Maintenance Release
 

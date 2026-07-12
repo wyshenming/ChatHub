@@ -6,5 +6,10 @@ contextBridge.exposeInMainWorld("aiChatHub", {
   appendWebViewPerformanceLog: (entry) => ipcRenderer.invoke("append-webview-performance-log", entry),
   getCloseSettings: () => ipcRenderer.invoke("get-close-settings"),
   setCloseSettings: (settings) => ipcRenderer.invoke("set-close-settings", settings),
-  version: "1.2.1"
+  onWebViewOpenTab: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on("webview-open-tab", listener);
+    return () => ipcRenderer.removeListener("webview-open-tab", listener);
+  },
+  version: "1.2.2"
 });
