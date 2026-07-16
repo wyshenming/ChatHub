@@ -1,5 +1,7 @@
 import { DEFAULT_ZOOM_PERCENT, RUNTIME_PARTITION } from "./constants.js";
 
+const NAVIGATION_TIMEOUT_MS = 30000;
+
 export class WebViewManager {
   constructor(frame, callbacks) {
     this.frame = frame;
@@ -49,6 +51,11 @@ export class WebViewManager {
       loadStartAt: null,
       loadUrlCallCost: null,
       lastAccessedAt: 0,
+      navigationTimeoutId: null,
+      isRecovering: false,
+      isDiscarded: false,
+      recoveryAttempts: 0,
+      authRedirectInProgress: false,
     };
 
     webview.className = "task-webview";
@@ -197,6 +204,9 @@ export class WebViewManager {
 
   bindWebViewEvents(record) {
     record.webview.addEventListener("did-attach", () => {
+      if (record.isDiscarded) {
+        return;
+      }
       record.isAttached = true;
       this.applyZoomPercent(record, record.zoomPercent);
       this.logLifecycle(record, "Attached");
@@ -204,6 +214,9 @@ export class WebViewManager {
     });
 
     record.webview.addEventListener("dom-ready", () => {
+      if (record.isDiscarded) {
+        return;
+      }
       record.isNavigationReady = true;
       record.currentUrl = this.safeGetUrl(record);
       this.logNavigationEvent(record, "dom-ready");
@@ -213,16 +226,32 @@ export class WebViewManager {
     });
 
     record.webview.addEventListener("did-start-loading", () => {
+      if (record.isDiscarded) {
+        return;
+      }
+      if (!record.isLoadingTarget) {
+        record.targetUrl = this.safeGetUrl(record) || this.getActiveTab(record)?.url || record.targetUrl;
+      }
       record.isLoading = true;
+      record.isLoadingTarget = true;
+      record.isNavigationReady = false;
       record.loadStartAt = performance.now();
+      this.startNavigationTimeout(record);
       this.logNavigationEvent(record, "did-start-loading");
       this.notifyLoading(record);
     });
 
     record.webview.addEventListener("did-stop-loading", () => {
+      if (record.isDiscarded) {
+        return;
+      }
       record.isLoading = false;
+      record.isLoadingTarget = false;
+      this.clearNavigationTimeout(record);
       record.isNavigationReady = true;
       record.currentUrl = this.safeGetUrl(record);
+      record.recoveryAttempts = 0;
+      this.finishAuthRedirectIfComplete(record);
       this.logNavigationEvent(record, "did-stop-loading");
       this.flushPendingTask(record);
       this.notifyReady(record);
@@ -230,10 +259,16 @@ export class WebViewManager {
     });
 
     record.webview.addEventListener("did-finish-load", () => {
+      if (record.isDiscarded) {
+        return;
+      }
       record.isLoading = false;
       record.isLoadingTarget = false;
+      this.clearNavigationTimeout(record);
       record.isNavigationReady = true;
       record.currentUrl = this.safeGetUrl(record);
+      record.recoveryAttempts = 0;
+      this.finishAuthRedirectIfComplete(record);
       if (record.currentUrl && record.currentUrl !== "about:blank") {
         record.hasLoaded = true;
         record.loadedUrl = record.currentUrl;
@@ -242,20 +277,36 @@ export class WebViewManager {
     });
 
     record.webview.addEventListener("did-navigate", (event) => {
+      if (record.isDiscarded) {
+        return;
+      }
+      this.trackAuthRedirectNavigation(record, event.url);
+      record.targetUrl = event.url || record.targetUrl;
       this.updateActiveTabUrl(record, event.url);
     });
 
     record.webview.addEventListener("did-navigate-in-page", (event) => {
+      if (record.isDiscarded) {
+        return;
+      }
+      this.trackAuthRedirectNavigation(record, event.url);
       this.updateActiveTabUrl(record, event.url);
     });
 
     record.webview.addEventListener("page-title-updated", (event) => {
+      if (record.isDiscarded) {
+        return;
+      }
       this.updateActiveTabTitle(record, event.title);
     });
 
     record.webview.addEventListener("did-fail-load", (event) => {
+      if (record.isDiscarded) {
+        return;
+      }
       record.isLoading = false;
       record.isLoadingTarget = false;
+      this.clearNavigationTimeout(record);
       record.currentUrl = this.safeGetUrl(record);
       this.logNavigationEvent(record, "did-fail-load", {
         errorCode: event.errorCode,
@@ -271,6 +322,15 @@ export class WebViewManager {
       if (event.errorCode !== -3) {
         this.notifyFailed(record);
       }
+    });
+
+    record.webview.addEventListener("render-process-gone", (event) => {
+      if (record.isDiscarded) {
+        return;
+      }
+
+      this.logNavigationEvent(record, "render-process-gone", { reason: event.reason || "unknown" });
+      this.recoverRecord(record, "render-process-gone");
     });
   }
 
@@ -538,7 +598,9 @@ export class WebViewManager {
 
     const loadUrlStart = performance.now();
     record.targetUrl = targetUrl;
+    this.trackAuthRedirectNavigation(record, targetUrl);
     record.isLoadingTarget = true;
+    this.startNavigationTimeout(record);
     if (this.activeNavigation?.taskId === task.id) {
       this.activeNavigation.loadUrlStartAt = loadUrlStart;
       this.activeNavigation.targetUrl = targetUrl;
@@ -554,6 +616,8 @@ export class WebViewManager {
           record.webview.loadURL(targetUrl);
           this.logLoadUrlCall(task, record, targetUrl, retryStart, true);
         } catch {
+          record.isLoadingTarget = false;
+          this.clearNavigationTimeout(record);
           this.logNavigationEvent(record, "loadURL-failed", { task: task.title || task.id, targetUrl });
           this.notifyFailed(record);
         }
@@ -579,12 +643,112 @@ export class WebViewManager {
 
   reload() {
     const record = this.activeRecord();
-    record?.webview.reload();
+    this.reloadRecord(record);
   }
 
   reloadTask(taskId) {
     const record = this.webviewPool.get(taskId);
-    record?.webview.reload();
+    this.reloadRecord(record);
+  }
+
+  reloadRecord(record) {
+    if (!record) {
+      return;
+    }
+
+    if (this.shouldPreserveAuthRedirect(record)) {
+      try {
+        record.webview.reload();
+      } catch {
+        this.notifyFailed(record);
+      }
+      return;
+    }
+
+    if (record.isLoadingTarget || !record.isNavigationReady) {
+      this.recoverRecord(record, "manual-reload-during-pending-load", { resetAttempts: true });
+      return;
+    }
+
+    try {
+      record.webview.reload();
+    } catch {
+      this.recoverRecord(record, "manual-reload-failed", { resetAttempts: true });
+    }
+  }
+
+  startNavigationTimeout(record) {
+    this.clearNavigationTimeout(record);
+    record.navigationTimeoutId = window.setTimeout(() => {
+      if (!this.isManagedRecord(record) || !record.isLoadingTarget) {
+        return;
+      }
+
+      this.logNavigationEvent(record, "navigation-timeout", {
+        timeoutMs: NAVIGATION_TIMEOUT_MS,
+        targetUrl: record.targetUrl,
+      });
+      this.recoverRecord(record, "navigation-timeout");
+    }, NAVIGATION_TIMEOUT_MS);
+  }
+
+  clearNavigationTimeout(record) {
+    if (record?.navigationTimeoutId !== null) {
+      window.clearTimeout(record.navigationTimeoutId);
+      record.navigationTimeoutId = null;
+    }
+  }
+
+  recoverRecord(record, reason, { resetAttempts = false } = {}) {
+    if (!this.isManagedRecord(record) || record.isRecovering) {
+      return;
+    }
+
+    if (this.shouldPreserveAuthRedirect(record)) {
+      record.isLoadingTarget = false;
+      this.clearNavigationTimeout(record);
+      this.logNavigationEvent(record, "auth-redirect-recovery-skipped", { reason, targetUrl: record.targetUrl });
+      this.notifyFailed(record);
+      return;
+    }
+
+    const recoveryAttempts = resetAttempts ? 0 : record.recoveryAttempts;
+    if (recoveryAttempts >= 1) {
+      record.isLoadingTarget = false;
+      this.clearNavigationTimeout(record);
+      this.logNavigationEvent(record, "webview-recovery-exhausted", { reason, targetUrl: record.targetUrl });
+      this.notifyFailed(record);
+      return;
+    }
+
+    record.isRecovering = true;
+    record.isDiscarded = true;
+    this.clearNavigationTimeout(record);
+
+    const targetUrl = this.getActiveTab(record)?.url || record.targetUrl;
+    const replacementTask = {
+      id: record.taskId,
+      title: record.taskTitle,
+      url: targetUrl,
+      initialUrl: targetUrl,
+      zoomPercent: record.zoomPercent,
+    };
+    const replacement = this.createWebViewRecord(replacementTask);
+    replacement.tabs = record.tabs.map((tab) => ({ ...tab }));
+    replacement.activeTabId = record.activeTabId;
+    replacement.targetUrl = targetUrl;
+    replacement.pendingTask = replacementTask;
+    replacement.lastAccessedAt = performance.now();
+    replacement.recoveryAttempts = recoveryAttempts + 1;
+
+    this.logNavigationEvent(record, "webview-recovery", { reason, targetUrl });
+    this.webviewPool.set(record.taskId, replacement);
+    if (this.webview === record.webview) {
+      this.webview = replacement.webview;
+    }
+    record.webview.remove();
+    this.updateVisibleRecords();
+    this.notifyLoading(replacement);
   }
 
   goBackTask(taskId) {
@@ -630,6 +794,8 @@ export class WebViewManager {
 
   evictRecord(record, reason) {
     const poolSizeBefore = this.webviewPool.size;
+    record.isDiscarded = true;
+    this.clearNavigationTimeout(record);
     this.logWebViewPoolEvict(record, reason, poolSizeBefore, poolSizeBefore - 1);
     this.logDestroy(record, `evict:${reason}`);
     record.webview.remove();
@@ -643,6 +809,8 @@ export class WebViewManager {
     }
 
     this.logDestroy(record, "task-removed");
+    record.isDiscarded = true;
+    this.clearNavigationTimeout(record);
     record.webview.remove();
     this.webviewPool.delete(taskId);
 
@@ -695,6 +863,10 @@ export class WebViewManager {
     return Boolean(record && record.taskId === this.currentTaskId);
   }
 
+  isManagedRecord(record) {
+    return Boolean(record && this.webviewPool.get(record.taskId) === record);
+  }
+
   notifyLoading(record) {
     if (this.isActiveRecord(record)) {
       this.callbacks.onLoading?.(record.taskId);
@@ -738,20 +910,20 @@ export class WebViewManager {
 
   logSwitchStart(navigation) {
     this.logPerformance(
-      `[WebView]\nTask: ${navigation.taskTitle}\nAction: ${navigation.action}\nReuse Existing: ${navigation.reuseExisting}\nCurrent URL: ${navigation.currentUrl || ""}\nTarget URL: ${navigation.targetUrl || ""}\nNeed Reload: ${navigation.needReload}\nSwitch Cost: ${this.formatCost(0)}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
+      `[WebView]\nTask: ${navigation.taskTitle}\nAction: ${navigation.action}\nReuse Existing: ${navigation.reuseExisting}\nCurrent URL: ${this.safeLogUrl(navigation.currentUrl)}\nTarget URL: ${this.safeLogUrl(navigation.targetUrl)}\nNeed Reload: ${navigation.needReload}\nSwitch Cost: ${this.formatCost(0)}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
     );
   }
 
   logSwitchDecision(task, currentUrl, targetUrl, needReload) {
     this.logPerformance(
-      `[WebView]\nTask: ${task.title || task.name || task.id}\nAction: Switch Decision\nCurrent URL: ${currentUrl || ""}\nTarget URL: ${targetUrl || ""}\nNeed Reload: ${needReload}\nReason: ${needReload ? "not-yet-loaded-or-url-changed" : "cached-webview-reused"}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
+      `[WebView]\nTask: ${task.title || task.name || task.id}\nAction: Switch Decision\nCurrent URL: ${this.safeLogUrl(currentUrl)}\nTarget URL: ${this.safeLogUrl(targetUrl)}\nNeed Reload: ${needReload}\nReason: ${needReload ? "not-yet-loaded-or-url-changed" : "cached-webview-reused"}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
     );
   }
 
   logCachedSwitch(record) {
     const switchCost = this.activeNavigation ? performance.now() - this.activeNavigation.startAt : 0;
     this.logPerformance(
-      `[WebView]\nTask: ${record.taskTitle}\nAction: Show Cached\nReuse Existing: true\nSwitch Cost: ${this.formatCost(switchCost)}\nCurrent URL: ${this.safeGetUrl(record)}\nNeed Reload: false\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
+      `[WebView]\nTask: ${record.taskTitle}\nAction: Show Cached\nReuse Existing: true\nSwitch Cost: ${this.formatCost(switchCost)}\nCurrent URL: ${this.safeLogUrl(this.safeGetUrl(record))}\nNeed Reload: false\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
     );
   }
 
@@ -770,7 +942,7 @@ export class WebViewManager {
     }
 
     this.logPerformance(
-      `[WebView]\nTask: ${task.title || task.name || task.id}\nAction: loadURL${retried ? " Retry" : ""}\nURL: ${targetUrl}\nloadURL Cost: ${this.formatCost(cost)}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
+      `[WebView]\nTask: ${task.title || task.name || task.id}\nAction: loadURL${retried ? " Retry" : ""}\nURL: ${this.safeLogUrl(targetUrl)}\nloadURL Cost: ${this.formatCost(cost)}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
     );
   }
 
@@ -788,7 +960,7 @@ export class WebViewManager {
 
   logNavigationEvent(record, action, extra = {}) {
     const details = Object.entries(extra)
-      .map(([key, value]) => `${key}: ${value}`)
+      .map(([key, value]) => `${key}: ${/url/i.test(key) ? this.safeLogUrl(value) : value}`)
       .join("\n");
     this.logPerformance(
       `[WebView]\nTask: ${record.taskTitle || record.taskId}\nAction: ${action}\nTime: ${new Date().toISOString()}${details ? `\n${details}` : ""}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nMemory: ${this.memoryUsage()}`
@@ -820,6 +992,74 @@ export class WebViewManager {
     } catch {
       return currentUrl.replace(/\/$/, "") === targetUrl.replace(/\/$/, "");
     }
+  }
+
+  safeLogUrl(url) {
+    if (!url) {
+      return "";
+    }
+
+    try {
+      const parsed = new URL(url);
+      const sensitiveKeys = ["code", "state", "id_token", "access_token", "token", "session_state"];
+      sensitiveKeys.forEach((key) => {
+        if (parsed.searchParams.has(key)) {
+          parsed.searchParams.set(key, "[redacted]");
+        }
+      });
+      const sensitiveHashPattern = new RegExp("([#?&])(" + sensitiveKeys.join("|") + ")=[^&#]*", "gi");
+      parsed.hash = parsed.hash.replace(sensitiveHashPattern, "$1$2=[redacted]");
+      return parsed.toString();
+    } catch {
+      return String(url);
+    }
+  }
+
+  isFirebaseAuthRedirectUrl(url) {
+    try {
+      const parsed = new URL(url);
+      const isFirebaseAuthHost =
+        parsed.hostname.endsWith(".firebaseapp.com") || parsed.hostname.endsWith(".web.app");
+      return isFirebaseAuthHost && parsed.pathname.startsWith("/__/auth/handler");
+    } catch {
+      return false;
+    }
+  }
+
+  isOAuthProviderUrl(url) {
+    try {
+      const hostname = new URL(url).hostname;
+      return hostname === "accounts.google.com" || hostname.endsWith(".accounts.google.com");
+    } catch {
+      return false;
+    }
+  }
+
+  trackAuthRedirectNavigation(record, url) {
+    if (this.isFirebaseAuthRedirectUrl(url)) {
+      record.authRedirectInProgress = true;
+    }
+  }
+
+  finishAuthRedirectIfComplete(record) {
+    const currentUrl = record.currentUrl || this.safeGetUrl(record);
+    if (
+      record.authRedirectInProgress &&
+      !this.isFirebaseAuthRedirectUrl(currentUrl) &&
+      !this.isOAuthProviderUrl(currentUrl)
+    ) {
+      record.authRedirectInProgress = false;
+    }
+  }
+
+  shouldPreserveAuthRedirect(record) {
+    const currentUrl = this.safeGetUrl(record);
+    return Boolean(
+      record?.authRedirectInProgress ||
+        this.isFirebaseAuthRedirectUrl(currentUrl) ||
+        this.isOAuthProviderUrl(currentUrl) ||
+        this.isFirebaseAuthRedirectUrl(record?.targetUrl)
+    );
   }
 
   observeWebViewRemoval(record) {

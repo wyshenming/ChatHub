@@ -1,5 +1,115 @@
 ﻿# DEVLOG
 
+## 2026-07-17 v1.2.5 发布准备
+
+### 本轮已经完成
+
+- 将 `package.json`、`package-lock.json`、`src/preload.js`、README 与发布说明统一升级到 `1.2.5`。
+- 在 `releases/README.md` 中新增 v1.2.5 中英双语维护版说明，保留历史版本记录。
+- 发布前补齐站内跳转 / 重定向的加载看门狗、成功后的恢复次数重置、认证回调保护和 OAuth hash 参数脱敏。
+- `npm run dist` 完整打包通过，重新生成 x64 unpacked 应用与 NSIS 安装包。
+- `dist/ChatHub.exe` 与 `dist/win-unpacked/ChatHub.exe` 的 FileVersion / ProductVersion 均为 `1.2.5`。
+- `dist/ChatHub.exe --quit-for-uninstall` 无界面启动 / 退出烟测通过，退出码为 0，未残留 ChatHub 进程。
+- 安装包：`dist/ChatHub-Setup-x64.exe`，大小 80,246,062 字节。
+- 安装包 SHA256：`DE82FAD12E8101816D2AAC992EC7FA5FE4C6F292CFACDF6E4672C43CB69785F2`。
+
+### 发布状态
+
+- 待完成：提交并推送代码、创建新 tag `v1.2.5`、创建 GitHub Release 并上传安装包。
+
+## 2026-07-17 撤回网页标签拖拽分屏
+
+### 本轮已经完成
+
+- 按用户反馈撤回“网页分页标签拖出后创建分屏”的功能，分页标签恢复为只支持点击切换和关闭。
+- 删除临时任务、临时 WebView、标签拖拽数据和拖拽样式，不保留隐藏的功能分支。
+- 保留侧边栏任务拖到工作区的任务级分屏，以及分屏后拖动左右工具栏互换页面。
+- 白屏恢复、Firebase 登录处理和安装图标修复均未撤回。
+
+### 验证结果
+
+- 已确认分页拖拽专用方法、数据类型和样式没有源码残留。
+- `node --check` 已通过：TaskManager、WebViewManager、Controller、renderer。
+- 原有任务级分屏代码和左右工具栏互换代码保持不变。
+
+## 2026-07-17 安装图标小尺寸修复
+
+### 本轮已经完成
+
+- 确认 `build/icon.png` 原图完整，安装向导中的缺角来自旧 ICO 缺少 Windows 高 DPI 常用尺寸后发生的二次缩放。
+- 新增可复现的 ICO 生成脚本，输出 16 / 20 / 24 / 28 / 32 / 40 / 48 / 56 / 64 / 128 / 256 像素帧。
+- `dist` 和 `dist:dir` 构建前会自动重新生成 ICO，避免以后更换 PNG 后遗忘同步图标。
+
+### 已经修改的文件
+
+- `scripts/generate-icon-ico.mjs`
+- `package.json`
+- `build/icon.ico`
+- `DEVLOG.md`
+- `TODO.md`
+
+### 验证结果
+
+- 新 ICO 已确认包含 11 个尺寸帧：16 / 20 / 24 / 28 / 32 / 40 / 48 / 56 / 64 / 128 / 256。
+- 撤回分页拖拽后重新执行 `npm run dist`，完整打包通过。
+- 新安装包：`dist/ChatHub-Setup-x64.exe`，大小 80,245,922 字节。
+- 新安装包 SHA256：`936E1C769C52EAE0F858E5B4157DF1EAE70FD6573F43EEFB1E610F34E7806FD4`。
+- 待人工验证：在当前 Windows 缩放比例下运行新安装包，确认安装向导右上角图标完整。
+
+## 2026-07-17 WebView 白屏卡加载恢复
+
+### 问题原因
+
+- 自定义网页“风月”在日志中已记录 `loadURL`，但未再触发 `did-start-loading`、`did-finish-load`、`did-stop-loading` 或 `did-fail-load`。
+- 原实现会持续保留 `isLoadingTarget` 状态；刷新只对同一个失效 WebView 调用 `reload()`，因此白屏和“正在加载”不会自行恢复。
+- Firebase `signInViaPopup` 的登录处理页曾被主进程拦截并改为 ChatHub 标签页，破坏了原页面与登录弹窗之间的会话关联，导致白屏或 `missing initial state`。
+
+### 本轮已经完成
+
+- Firebase `/__/auth/handler` 仅以受限子窗口打开，保留原网页 WebView 作为 OAuth 登录发起者；其余弹窗继续保持原有的新标签页行为。
+- Firebase / Google 重定向登录期间禁止重建 WebView；刷新仍复用同一实例，避免丢失 Firebase 存在 `sessionStorage` 中的回调校验状态。
+- 认证保护只作用于 Firebase 回调页和 Google 授权页；回到普通网站登录入口后恢复白屏重建能力。
+- WebView 性能日志会脱敏 OAuth URL 的 `code`、`state`、token 等参数，避免后续写入一次性登录参数。
+- 在 `WebViewManager` 为每次导航增加 30 秒超时兜底；超时后仅销毁并重建该任务的 WebView。
+- 自动重建最多尝试一次；仍不能加载时明确显示失败，避免持续重建循环，用户可用刷新按钮再次发起恢复。
+- 监听 `render-process-gone`，渲染进程异常时自动重建对应 WebView。
+- 页面处于未完成加载状态时，刷新按钮改为直接重建该页面的 WebView；普通已加载页面仍保持原来的 `reload()` 行为。
+- 重建会复制当前任务的页面标签、当前标签、目标 URL 和缩放比例；不清理任务、Cookie、localStorage、sessionStorage 或 IndexedDB。
+- 丢弃旧 WebView 后忽略其延迟事件，避免旧实例覆盖新页面的加载状态。
+- 每次顶层导航、站内跳转或重定向开始时都会重新启动 30 秒看门狗，成功停止加载后及时清除。
+- 页面成功加载后重置自动恢复次数，使后续独立故障仍可恢复一次。
+- 认证重定向进行期间继续保护原 WebView，避免回调尚未完成时重建导致状态丢失。
+- OAuth 日志脱敏同时覆盖 query 与 hash 中的授权码、令牌和 state 参数。
+
+### 已经修改的文件
+
+- `src/renderer/webview-manager.js`
+- `DEVLOG.md`
+- `TODO.md`
+
+### 验证结果
+
+- `node --check src\\renderer\\webview-manager.js` 通过。
+- `git diff --check` 通过，仅有 CRLF 提示。
+- `npm run dist:dir` 成功，已生成新的 x64 unpacked 应用。
+- 无写入逻辑测试已覆盖站内导航看门狗、成功后恢复次数重置、认证保护与 query / hash 脱敏。
+- 待人工验证：让任一网页卡在白屏加载，等待约 30 秒或点击刷新，确认页面恢复且登录状态仍保留。
+
+## 2026-07-16 远端核对与安装包重建
+
+### 本轮已经完成
+
+- 从 `origin` 执行 `git fetch --prune`，确认本地 `main` 与 `origin/main` 均指向 `b53cb18`（Release ChatHub v1.2.2），没有可拉取的新提交。
+- 运行 `npm run dist`，重新生成 Windows x64 的 NSIS 安装包与 unpacked 应用。
+
+### 验证结果
+
+- 完整构建成功：`electron-builder --win --x64 --dir` 与 NSIS 安装包构建均通过。
+- 安装包：`dist/ChatHub-Setup-x64.exe`，大小 80,074,326 字节。
+- 安装包 SHA256：`6800981D71645E21B9530DE53C602321DFFC1F1A6D4AA3CA363B8BD44591B0C9`。
+- `dist/ChatHub.exe` 和 `dist/win-unpacked/ChatHub.exe` 均存在；PE machine 为 `0x8664`（x64）。
+- 本轮不修改业务代码、用户数据或 WebView 登录状态，未创建 Release。
+
 ## 2026-06-26 交接日志
 
 ### 本轮已经完成

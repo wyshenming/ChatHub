@@ -357,9 +357,32 @@ function createWindow() {
   mainWindow.on("close", handleWindowClose);
 }
 
+function isFirebaseAuthPopupUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const isFirebaseAuthHost =
+      parsed.hostname.endsWith(".firebaseapp.com") || parsed.hostname.endsWith(".web.app");
+    return isFirebaseAuthHost && parsed.pathname.startsWith("/__/auth/handler");
+  } catch {
+    return false;
+  }
+}
+
 app.on("web-contents-created", (_event, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
     if (contents.getType() === "webview") {
+      if (isFirebaseAuthPopupUrl(url)) {
+        return {
+          action: "allow",
+          overrideBrowserWindowOptions: {
+            width: 520,
+            height: 720,
+            parent: mainWindow || undefined,
+            autoHideMenuBar: true,
+          },
+        };
+      }
+
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("webview-open-tab", {
           webContentsId: contents.id,

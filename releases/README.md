@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.2.2
+当前版本：v1.2.5
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,13 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.5 维护版
+
+- 改进 WebView 白屏和长时间停留在“正在加载”状态时的恢复能力，并限制自动恢复次数以避免循环重建。
+- 修复 Firebase / Google OAuth 登录回调，保护认证期间的原 WebView，避免 `sessionStorage` 状态丢失导致 `missing initial state`。
+- 对诊断日志中的 OAuth URL 进行脱敏，隐藏一次性授权码、令牌和状态参数。
+- 补齐 Windows 安装图标的常用高 DPI ICO 尺寸，改善安装向导中的小尺寸图标显示。
 
 ### v1.2.2 维护版
 
@@ -95,7 +102,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.2.2
+Current version: v1.2.5
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -104,6 +111,13 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.5 Maintenance Release
+
+- Improved recovery from blank WebViews and pages stuck in the loading state, while limiting automatic recovery to prevent rebuild loops.
+- Fixed Firebase / Google OAuth callbacks by preserving the original WebView during authentication and preventing `missing initial state` errors caused by lost `sessionStorage`.
+- Redacted one-time authorization codes, tokens, and state parameters from OAuth URLs in diagnostic logs.
+- Added common high-DPI ICO sizes for clearer Windows installer icons.
 
 ### v1.2.2 Maintenance Release
 

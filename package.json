@@ -1,14 +1,15 @@
 {
   "name": "chathub",
-  "version": "1.2.2",
+  "version": "1.2.5",
   "description": "ChatHub",
   "productName": "ChatHub",
   "author": "染泓如梦QAQ",
   "main": "src/main.js",
   "scripts": {
+    "icon:generate": "node scripts/generate-icon-ico.mjs",
     "start": "electron .",
-    "dist": "electron-builder --win --x64 --dir && node scripts/set-exe-metadata.js --unpacked-only && node scripts/copy-x64-app-exe.js && electron-builder --win nsis --x64 --prepackaged dist/win-unpacked",
-    "dist:dir": "electron-builder --win --x64 --dir && node scripts/set-exe-metadata.js --unpacked-only && node scripts/copy-x64-app-exe.js"
+    "dist": "npm run icon:generate && electron-builder --win --x64 --dir && node scripts/set-exe-metadata.js --unpacked-only && node scripts/copy-x64-app-exe.js && electron-builder --win nsis --x64 --prepackaged dist/win-unpacked",
+    "dist:dir": "npm run icon:generate && electron-builder --win --x64 --dir && node scripts/set-exe-metadata.js --unpacked-only && node scripts/copy-x64-app-exe.js"
   },
   "build": {
     "appId": "local.chathub",
