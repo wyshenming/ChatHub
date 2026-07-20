@@ -1,5 +1,24 @@
 ﻿# DEVLOG
 
+## 2026-07-20 v1.2.6 发布
+
+### 本轮已经完成
+
+- 将 `package.json`、`package-lock.json`、`src/preload.js`、README 与发布说明统一升级到 `1.2.6`。
+- 在 `releases/README.md` 中新增 v1.2.6 中英双语维护版说明，保留历史版本记录。
+- 完整收口分屏比例拖动：默认 50% / 50%，任一侧限制在 25% 至 75%，并避免 WebView 抢占拖动指针事件。
+- `npm run dist` 完整打包通过，重新生成 x64 unpacked 应用与 NSIS 安装包。
+- `dist/ChatHub.exe` 与 `dist/win-unpacked/ChatHub.exe` 的 ProductVersion 均为 `1.2.6`。
+- 安装包：`dist/ChatHub-Setup-x64.exe`，大小 80,247,222 字节。
+- 安装包 SHA256：`6A776B02AB13EB9BFAC0E3C77322923974FF6137865FFC644C61E0B049A22791`。
+
+### 发布状态
+
+- 已完成：创建发布提交 `a6f6f53`，并将 `main` 推送到 GitHub。
+- 已完成：创建并推送全新 annotated tag `v1.2.6`，未覆盖任何历史 tag / Release。
+- 已完成：创建 GitHub Release `v1.2.6` 并上传 `ChatHub-Setup-x64.exe`。
+- Release：`https://github.com/wyshenming/ChatHub/releases/tag/v1.2.6`
+
 ## 2026-07-20 分屏比例拖动调整
 
 ### 本轮已经完成
