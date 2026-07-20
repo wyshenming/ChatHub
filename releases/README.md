@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.2.5
+当前版本：v1.2.6
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,13 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.6 维护版
+
+- 分屏默认保持 50% / 50%，新增可拖动的中间分隔线，可实时调整左右页面宽度。
+- 任意一侧最小 25%、最大 75%，避免页面被完全压缩。
+- 拖动过程中避免 WebView 抢占指针事件，并支持键盘方向键微调比例。
+- 调整仅作用于界面布局，不清理或迁移登录状态、任务数据和网站持久化数据。
 
 ### v1.2.5 维护版
 
@@ -102,7 +109,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.2.5
+Current version: v1.2.6
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -111,6 +118,13 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.6 Maintenance Release
+
+- Keeps split view at 50% / 50% by default and adds a draggable center divider for real-time pane resizing.
+- Constrains either pane to a minimum of 25% and a maximum of 75% so neither page can be collapsed completely.
+- Prevents WebViews from intercepting pointer input during resizing and supports keyboard arrow-key adjustments.
+- Changes layout only, without clearing or migrating login sessions, task data, or website persistent storage.
 
 ### v1.2.5 Maintenance Release
 

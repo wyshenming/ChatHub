@@ -6,7 +6,7 @@ ChatHub 是一个面向 Windows 的 AI 网页工作台。它基于 Electron + We
 
 ### 维护状态
 
-ChatHub 已发布正式版 `v1.2.5`，并进入稳定维护期。本项目作为自用小工具，后续不再规划功能性扩展，主要维护方向是 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
+ChatHub 已发布正式版 `v1.2.6`，并进入稳定维护期。本项目作为自用小工具，后续不再规划功能性扩展，主要维护方向是 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
 ### 功能特性
 
@@ -14,6 +14,7 @@ ChatHub 已发布正式版 `v1.2.5`，并进入稳定维护期。本项目作为
 - 支持添加自定义 AI 网页。
 - 使用单个可复用 WebView 运行时，降低内存占用。
 - 支持任务状态管理：运行中、已挂起、已完成。
+- 支持左右分屏，并可拖动中间分隔线在 25% / 75% 范围内调整两侧比例。
 - 登录状态保存在本机 Electron 持久化分区中。
 - 支持按当前网页或全部网页清理登录状态。
 - 支持系统托盘和关闭窗口行为设置。
@@ -86,7 +87,7 @@ ChatHub is a Windows desktop workspace for AI chat websites. It uses Electron + 
 
 ### Maintenance Status
 
-ChatHub has released stable version `v1.2.5` and is now in stable maintenance mode. As a personal utility, it no longer plans feature expansion; future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
+ChatHub has released stable version `v1.2.6` and is now in stable maintenance mode. As a personal utility, it no longer plans feature expansion; future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
 
 ### Features
 
@@ -94,6 +95,7 @@ ChatHub has released stable version `v1.2.5` and is now in stable maintenance mo
 - Add custom AI web pages.
 - Single reusable WebView runtime for lower memory usage.
 - Task status management: running, paused, and finished.
+- Adjustable side-by-side split view with a draggable divider constrained between 25% and 75%.
 - Local login/session storage through Electron's persistent partition.
 - Clear login state for the current page or all pages.
 - Configurable close behavior with system tray support.

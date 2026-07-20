@@ -11,6 +11,7 @@ const sidebar = document.querySelector(".sidebar");
 const webviewFrame = document.querySelector("#webview-frame");
 const welcomeScreen = document.querySelector("#welcome-screen");
 const splitDropOverlay = document.querySelector("#split-drop-overlay");
+const splitResizer = document.querySelector("#split-resizer");
 const paneTitleLeft = document.querySelector("#pane-title-left");
 const paneTitleRight = document.querySelector("#pane-title-right");
 const status = document.querySelector("#status");
@@ -80,6 +81,12 @@ let sidebarCollapsed = false;
 let editingSiteTaskId = null;
 let splitDropSide = null;
 let draggedPaneSide = null;
+let splitRatio = 50;
+let splitResizePointerId = null;
+let splitResizePointerOffset = 0;
+
+const MIN_SPLIT_RATIO = 25;
+const MAX_SPLIT_RATIO = 75;
 
 function closeContextMenu() {
   contextMenu?.remove();
@@ -203,6 +210,93 @@ function showSplitDropOverlay() {
 function hideSplitDropOverlay() {
   clearWebViewFrameDropSide();
   splitDropOverlay.hidden = true;
+}
+
+function applySplitRatio(value) {
+  const normalizedRatio = Math.min(MAX_SPLIT_RATIO, Math.max(MIN_SPLIT_RATIO, Number(value) || 50));
+  splitRatio = Math.round(normalizedRatio * 10) / 10;
+  webviewFrame.style.setProperty("--split-left-size", `${splitRatio}fr`);
+  webviewFrame.style.setProperty("--split-right-size", `${100 - splitRatio}fr`);
+  splitResizer.setAttribute("aria-valuenow", String(Math.round(splitRatio)));
+}
+
+function updateSplitRatioFromPointer(clientX) {
+  const frameRect = webviewFrame.getBoundingClientRect();
+  const frameStyle = window.getComputedStyle(webviewFrame);
+  const paddingLeft = Number.parseFloat(frameStyle.paddingLeft) || 0;
+  const paddingRight = Number.parseFloat(frameStyle.paddingRight) || 0;
+  const contentLeft = frameRect.left + webviewFrame.clientLeft + paddingLeft;
+  const contentWidth = webviewFrame.clientWidth - paddingLeft - paddingRight;
+  const paneWidth = Math.max(1, contentWidth - splitResizer.offsetWidth);
+  const dividerLeft = clientX - splitResizePointerOffset;
+  applySplitRatio(((dividerLeft - contentLeft) / paneWidth) * 100);
+}
+
+function finishSplitResize(event = null) {
+  if (splitResizePointerId === null) {
+    return;
+  }
+
+  if (event?.pointerId !== undefined && event.pointerId !== splitResizePointerId) {
+    return;
+  }
+
+  const pointerId = splitResizePointerId;
+  splitResizePointerId = null;
+  webviewFrame.classList.remove("split-resizing");
+  if (splitResizer.hasPointerCapture(pointerId)) {
+    splitResizer.releasePointerCapture(pointerId);
+  }
+}
+
+function bindSplitResizer() {
+  splitResizer.addEventListener("pointerdown", (event) => {
+    if (
+      !webviewFrame.classList.contains("split-mode") ||
+      !event.isPrimary ||
+      event.button !== 0
+    ) {
+      return;
+    }
+
+    const resizerRect = splitResizer.getBoundingClientRect();
+    splitResizePointerId = event.pointerId;
+    splitResizePointerOffset = event.clientX - resizerRect.left;
+    splitResizer.setPointerCapture(event.pointerId);
+    webviewFrame.classList.add("split-resizing");
+    closeZoomPopover();
+    event.preventDefault();
+  });
+
+  splitResizer.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== splitResizePointerId) {
+      return;
+    }
+
+    updateSplitRatioFromPointer(event.clientX);
+    event.preventDefault();
+  });
+
+  splitResizer.addEventListener("pointerup", finishSplitResize);
+  splitResizer.addEventListener("pointercancel", finishSplitResize);
+  splitResizer.addEventListener("lostpointercapture", finishSplitResize);
+  splitResizer.addEventListener("keydown", (event) => {
+    let nextRatio = splitRatio;
+    if (event.key === "ArrowLeft") {
+      nextRatio -= event.shiftKey ? 5 : 1;
+    } else if (event.key === "ArrowRight") {
+      nextRatio += event.shiftKey ? 5 : 1;
+    } else if (event.key === "Home") {
+      nextRatio = MIN_SPLIT_RATIO;
+    } else if (event.key === "End") {
+      nextRatio = MAX_SPLIT_RATIO;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    applySplitRatio(nextRatio);
+  });
 }
 
 function bindPaneToolbarDrag(toolbar, side) {
@@ -502,6 +596,7 @@ const view = {
     closeLeftSplitButton.hidden = !enabled;
     closeRightSplitButton.hidden = !enabled;
     if (!enabled) {
+      finishSplitResize();
       closeZoomPopover("right");
     }
   },
@@ -738,6 +833,7 @@ closeRightSplitButton.addEventListener("click", () => {
 
 bindPaneToolbarDrag(paneToolbarLeft, "left");
 bindPaneToolbarDrag(paneToolbarRight, "right");
+bindSplitResizer();
 
 Object.entries(paneZoomControls).forEach(([side, controls]) => {
   controls.openButton.addEventListener("click", (event) => {
@@ -922,6 +1018,7 @@ window.addEventListener("blur", () => {
   closeContextMenu();
   closeZoomPopover();
   hideSplitDropOverlay();
+  finishSplitResize();
 });
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
@@ -938,5 +1035,6 @@ window.addEventListener("dragend", () => {
   paneToolbarRight.classList.remove("dragging", "drop-target");
 });
 
+applySplitRatio(50);
 setSidebarCollapsed(storageManager.getUiSettings().sidebarCollapsed, false);
 controller.start();

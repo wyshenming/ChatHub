@@ -666,8 +666,46 @@ button {
 }
 
 .webview-frame.split-mode .pane-toolbar-right {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
+}
+
+.split-resizer {
+  display: none;
+}
+
+.webview-frame.split-mode .split-resizer {
+  position: relative;
+  z-index: 11;
+  display: block;
+  grid-column: 2;
+  grid-row: 1 / 3;
+  min-width: 8px;
+  cursor: col-resize;
+  outline: none;
+  touch-action: none;
+}
+
+.webview-frame.split-mode .split-resizer::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  border-radius: 999px;
+  background: var(--border);
+  content: "";
+  transform: translateX(-50%);
+  transition:
+    width 120ms ease,
+    background-color 120ms ease;
+}
+
+.webview-frame.split-mode .split-resizer:hover::before,
+.webview-frame.split-mode .split-resizer:focus-visible::before,
+.webview-frame.split-resizing .split-resizer::before {
+  width: 3px;
+  background: var(--accent);
 }
 
 .pane-close-button {
@@ -696,10 +734,21 @@ button {
 }
 
 .webview-frame.split-mode {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(0, var(--split-left-size, 1fr))
+    8px
+    minmax(0, var(--split-right-size, 1fr));
   grid-template-rows: 40px minmax(0, 1fr);
-  gap: 8px;
+  gap: 0;
   padding: 8px;
+}
+
+.webview-frame.split-resizing {
+  cursor: col-resize;
+}
+
+.webview-frame.split-resizing .task-webview {
+  pointer-events: none !important;
 }
 
 .welcome-screen {
@@ -802,7 +851,7 @@ button {
 }
 
 .webview-frame.split-mode .task-webview-comparison {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 2;
 }
 
