@@ -81,6 +81,14 @@ renderer 层按职责拆分：
 
 ChatHub 会把网页登录状态保存在本机 Electron 用户数据目录中。安装包不会携带个人账号 Cookie 或登录凭据。
 
+### 依赖安全状态
+
+截至 2026-07-21，`npm audit` 报告 8 个受影响依赖包：7 个高危、1 个严重。它们大多属于 Electron 打包工具链，在本项目个人自用、源码和依赖来源可信的场景下，实际风险较低。
+
+Electron `31.7.7` 会进入最终应用运行时，是当前需要长期关注的部分。项目已经启用上下文隔离并关闭网页的 Node.js 权限以降低风险；使用时仍应避免添加来源不明的自定义网页。
+
+当前稳定版不会执行可能破坏兼容性的强制升级。后续将在独立分支升级 Electron 和 electron-builder，并完整验证 WebView、登录状态、OAuth、分屏、打包、安装与卸载流程。详细记录见 [`DEPENDENCY_SECURITY.md`](DEPENDENCY_SECURITY.md)。
+
 ## English
 
 ChatHub is a Windows desktop workspace for AI chat websites. It uses Electron + WebView to bring ChatGPT, Gemini, DeepSeek, and custom AI web pages into one desktop window.
@@ -161,3 +169,11 @@ The renderer layer is split by responsibility:
 ### Notes
 
 ChatHub stores website login state locally in the Electron user data directory. The installer does not include personal account cookies or login credentials.
+
+### Dependency Security Status
+
+As of 2026-07-21, `npm audit` reports eight affected dependency packages: seven high-severity and one critical. Most belong to the Electron build toolchain. Their practical risk is low for this personally maintained application when its source code and dependencies come from trusted sources.
+
+Electron `31.7.7` is bundled into the final application runtime and remains the main item to address over time. Context isolation is enabled and Node.js integration is disabled for web content to reduce exposure. Users should still avoid adding untrusted custom websites.
+
+The stable branch will not receive a forced upgrade that could break compatibility. Electron and electron-builder will be upgraded later on a dedicated branch, followed by full validation of WebView behavior, login persistence, OAuth, split view, packaging, installation, and uninstallation. See [`DEPENDENCY_SECURITY.md`](DEPENDENCY_SECURITY.md) for the detailed record.
