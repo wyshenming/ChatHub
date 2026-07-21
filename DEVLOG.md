@@ -13,7 +13,14 @@
 - 安装包：`dist/ChatHub-Setup-x64.exe`，大小 80,247,295 字节。
 - 安装包 SHA256：`7BDDF72121A6348126BF84D93465AE96ADE5AA0D737C84F0E15B06206B7493CC`。
 - 已将安装包同步到 `releases/ChatHub-Setup-x64.exe`。
-- 待完成：提交、推送、创建全新 tag 与 GitHub Release。
+
+### 发布状态
+
+- 已完成：创建发布提交 `29c61a4`，并将 `main` 推送到 GitHub。
+- 已完成：创建并推送全新 annotated tag `v1.2.7`，未覆盖任何历史 tag / Release。
+- 已完成：创建 GitHub Release `v1.2.7` 并上传 `ChatHub-Setup-x64.exe`。
+- GitHub 返回的资产大小与 SHA256 均和本地安装包一致。
+- Release：`https://github.com/wyshenming/ChatHub/releases/tag/v1.2.7`
 
 ## 2026-07-21 分屏加载状态与弹窗层级修复
 
