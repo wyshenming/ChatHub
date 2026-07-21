@@ -1,6 +1,7 @@
 import { DEFAULT_ZOOM_PERCENT, RUNTIME_PARTITION } from "./constants.js";
 
 const NAVIGATION_TIMEOUT_MS = 30000;
+const MAX_RECOVERY_ATTEMPTS = 1;
 
 export class WebViewManager {
   constructor(frame, callbacks) {
@@ -250,7 +251,9 @@ export class WebViewManager {
       this.clearNavigationTimeout(record);
       record.isNavigationReady = true;
       record.currentUrl = this.safeGetUrl(record);
-      record.recoveryAttempts = 0;
+      if (record.currentUrl && record.currentUrl !== "about:blank") {
+        record.recoveryAttempts = 0;
+      }
       this.finishAuthRedirectIfComplete(record);
       this.logNavigationEvent(record, "did-stop-loading");
       this.flushPendingTask(record);
@@ -267,9 +270,9 @@ export class WebViewManager {
       this.clearNavigationTimeout(record);
       record.isNavigationReady = true;
       record.currentUrl = this.safeGetUrl(record);
-      record.recoveryAttempts = 0;
       this.finishAuthRedirectIfComplete(record);
       if (record.currentUrl && record.currentUrl !== "about:blank") {
+        record.recoveryAttempts = 0;
         record.hasLoaded = true;
         record.loadedUrl = record.currentUrl;
       }
@@ -713,7 +716,7 @@ export class WebViewManager {
     }
 
     const recoveryAttempts = resetAttempts ? 0 : record.recoveryAttempts;
-    if (recoveryAttempts >= 1) {
+    if (recoveryAttempts >= MAX_RECOVERY_ATTEMPTS) {
       record.isLoadingTarget = false;
       this.clearNavigationTimeout(record);
       this.logNavigationEvent(record, "webview-recovery-exhausted", { reason, targetUrl: record.targetUrl });
@@ -863,24 +866,31 @@ export class WebViewManager {
     return Boolean(record && record.taskId === this.currentTaskId);
   }
 
+  isVisibleRecord(record) {
+    return Boolean(
+      record &&
+        (record.taskId === this.currentTaskId || record.taskId === this.comparisonTaskId)
+    );
+  }
+
   isManagedRecord(record) {
     return Boolean(record && this.webviewPool.get(record.taskId) === record);
   }
 
   notifyLoading(record) {
-    if (this.isActiveRecord(record)) {
+    if (this.isVisibleRecord(record)) {
       this.callbacks.onLoading?.(record.taskId);
     }
   }
 
   notifyReady(record) {
-    if (this.isActiveRecord(record)) {
+    if (this.isVisibleRecord(record)) {
       this.callbacks.onReady?.(record.taskId);
     }
   }
 
   notifyFailed(record) {
-    if (this.isActiveRecord(record)) {
+    if (this.isVisibleRecord(record)) {
       this.callbacks.onFailed?.(record.taskId);
     }
   }

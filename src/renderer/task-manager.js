@@ -343,12 +343,15 @@ export class TaskManager {
       return null;
     }
 
+    const wasActive = this.activeTaskId === taskId;
     this.tasks = task.custom
       ? this.tasks.filter((item) => item.id !== taskId)
       : this.tasks.map((item) =>
           item.id === taskId ? { ...item, deleted: true, updatedAt: now() } : item
         );
-    this.activeTaskId = this.all()[0]?.id;
+    if (wasActive || !this.get(this.activeTaskId)) {
+      this.activeTaskId = this.all()[0]?.id;
+    }
     this.persist();
     return task;
   }

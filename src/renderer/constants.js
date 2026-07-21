@@ -19,6 +19,7 @@ export const TaskStatus = {
 
 export const text = {
   loading: "\u6b63\u5728\u52a0\u8f7d",
+  refreshing: "\u6b63\u5728\u5237\u65b0",
   ready: "\u5df2\u5c31\u7eea",
   paused: "\u5df2\u6302\u8d77",
   running: "\u8fd0\u884c\u4e2d",

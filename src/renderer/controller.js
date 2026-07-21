@@ -288,6 +288,8 @@ export class AppController {
       return;
     }
 
+    this.view.showReloadFeedback(side);
+    this.view.setStatus(text.refreshing, "", side);
     this.webViewManager.reloadTask(task.id);
   }
 
@@ -675,7 +677,6 @@ export class AppController {
     if (wasComparison) {
       this.comparisonTaskId = null;
     }
-    this.emitTasks();
 
     if (wasActive) {
       const nextTask = this.taskManager.active();
@@ -690,6 +691,8 @@ export class AppController {
         this.webViewManager.clear();
       }
     }
+
+    this.emitTasks();
   }
 
   showAllTasks() {

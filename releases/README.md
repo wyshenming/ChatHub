@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.2.6
+当前版本：v1.2.7
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,15 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.7 维护版
+
+- 修复右侧分屏 WebView 加载完成、失败或刷新后状态仍停留在“正在加载”的问题。
+- 自动恢复最多重建 1 次，初始化空白页不再错误清零计数，持续网络异常时会停止重试并显示加载失败。
+- 刷新按钮增加“正在刷新”、短暂旋转和防重复点击反馈。
+- 打开设置、添加网页、关于等弹窗时隐藏分屏中线，关闭弹窗后保持原分屏比例。
+- 修复删除分屏一侧后主任务状态不同步、第一次重新拖入页面不显示的问题。
+- 本次维护不清理或迁移登录状态、任务数据和网站持久化数据。
 
 ### v1.2.6 维护版
 
@@ -109,7 +118,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.2.6
+Current version: v1.2.7
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -118,6 +127,15 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.2.7 Maintenance Release
+
+- Fixed the right split WebView status remaining stuck on “Loading” after completion, failure, or refresh.
+- Limits automatic recovery to one WebView rebuild; the initialization blank page no longer resets the counter, and persistent network failures now stop retrying and report a load failure.
+- Adds immediate refresh feedback with a “Refreshing” status, a short icon rotation, and temporary click prevention.
+- Hides the split divider while settings, add-site, about, and other dialogs are open, while preserving the split ratio when they close.
+- Fixed task-state desynchronization after deleting one split pane, so the first newly dragged page appears correctly.
+- This maintenance release does not clear or migrate login sessions, task data, or website persistent storage.
 
 ### v1.2.6 Maintenance Release
 

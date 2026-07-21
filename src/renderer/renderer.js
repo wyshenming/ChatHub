@@ -84,6 +84,7 @@ let draggedPaneSide = null;
 let splitRatio = 50;
 let splitResizePointerId = null;
 let splitResizePointerOffset = 0;
+const reloadFeedbackTimers = { left: null, right: null };
 
 const MIN_SPLIT_RATIO = 25;
 const MAX_SPLIT_RATIO = 75;
@@ -371,6 +372,22 @@ const view = {
     const target = side === "right" ? statusRight : status;
     target.textContent = label;
     target.className = `status ${state}`.trim();
+  },
+
+  showReloadFeedback(side = "left") {
+    const button = side === "right" ? reloadRightButton : reloadLeftButton;
+    window.clearTimeout(reloadFeedbackTimers[side]);
+    button.classList.remove("refresh-feedback");
+    void button.offsetWidth;
+    button.classList.add("refresh-feedback");
+    button.setAttribute("aria-busy", "true");
+    button.disabled = true;
+    reloadFeedbackTimers[side] = window.setTimeout(() => {
+      button.classList.remove("refresh-feedback");
+      button.removeAttribute("aria-busy");
+      button.disabled = false;
+      reloadFeedbackTimers[side] = null;
+    }, 700);
   },
 
   copyStatus(sourceSide, targetSide) {

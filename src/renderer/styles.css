@@ -465,6 +465,25 @@ button {
   place-items: center;
 }
 
+.quick-action-button.refresh-feedback .button-icon {
+  animation: refresh-feedback-spin 700ms ease-in-out;
+}
+
+.quick-action-button.refresh-feedback:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+@keyframes refresh-feedback-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .zoom-control {
   position: relative;
   display: inline-flex;
@@ -919,6 +938,11 @@ button {
 body.modal-open .task-webview {
   pointer-events: none;
   visibility: hidden;
+}
+
+body.modal-open .split-resizer {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .modal-backdrop {
