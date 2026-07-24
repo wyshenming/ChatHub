@@ -1,5 +1,40 @@
 # 依赖安全记录
 
+## 2026-07-24 独立升级分支复查
+
+### 升级结果
+
+在分支 `codex/dependency-security-upgrade`、ChatHub `v1.2.7`、Node.js `v24.18.0`、npm `v11.16.0` 环境中：
+
+- `electron`：`31.7.7` → `43.2.0`
+- `electron-builder`：`24.13.3` → `26.15.3`
+- `app-builder-lib` / `dmg-builder` / `electron-builder-squirrel-windows`：升级至 `26.15.3`
+- `brace-expansion`：受影响版本升级至 `1.1.16` / `2.1.2`
+- `js-yaml`：升级至 `4.3.0`
+- `tar`：升级至 `7.5.21`
+
+升级后执行 `npm audit` 和 `npm audit --omit=dev`，均报告 0 个已知漏洞。
+
+### 自动验证结果
+
+- 主进程、preload、renderer 与构建脚本共 12 个 JavaScript / MJS 文件通过 `node --check`。
+- Electron 运行时版本确认为 `v43.2.0`。
+- `npm run dist:dir` 和 `npm run dist` 均成功。
+- `dist/ChatHub.exe` 与 `dist/win-unpacked/ChatHub.exe` 的产品版本、文件版本均为 `1.2.7`，PE machine 为 x64 `0x8664`。
+- ASAR 中确认包含 `src/main.js`、`src/preload.js` 和 `src/renderer/index.html`。
+- 应用主窗口启动后进程正常响应；使用 `--quit-for-uninstall` 退出码为 0，无残留 ChatHub 进程。
+- 测试安装包大小为 101,453,805 字节，SHA256 为 `41BEFE09E828C3235374EBDD1638677FFC6DA5E05F118E566D837D1EC0F4B3DD`。
+
+### 仍需人工验证
+
+- ChatGPT、Gemini、DeepSeek 和自定义网页的实际加载与登录。
+- Cookie、网页登录状态和 `persist:chathub-runtime` 持久化状态在升级前后保持不变。
+- OAuth 登录、弹窗、白屏恢复、任务切换、网页标签与分屏拖动。
+- 托盘、关闭行为、单实例和清理登录状态功能。
+- NSIS 安装、旧版本覆盖升级及卸载流程。
+
+本节为独立升级分支的验证记录；在人工验收和合并完成前，不改变稳定主分支的发布状态。
+
 ## 2026-07-21 npm audit 基线
 
 ### 当前结果

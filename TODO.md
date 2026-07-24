@@ -24,9 +24,11 @@
 
 - 已完成：在 `DEPENDENCY_SECURITY.md` 建立 2026-07-21 审计基线，记录 7 个高危、1 个严重依赖告警及实际影响。
 - 已完成：在 `README.md` 增加中英双语依赖安全状态说明。
-- 当前决定：个人自用和可信构建来源场景下继续使用稳定版，不执行 `npm audit fix --force`。
-- 待处理：有合适时机时创建独立升级分支，升级 Electron 与 electron-builder。
-- 待验证：升级分支必须完整验证 WebView、登录状态、OAuth、分屏、单实例、托盘、NSIS 安装、覆盖升级和卸载流程。
+- 已完成：在 `codex/dependency-security-upgrade` 独立分支将 Electron 升级至 `43.2.0`、electron-builder 升级至 `26.15.3`，未执行 `npm audit fix --force`。
+- 已完成：`npm audit` 与 `npm audit --omit=dev` 均为 0 个已知漏洞。
+- 已完成：静态检查、x64 unpacked / NSIS 完整构建、PE / ASAR 检查和启动 / 退出烟测。
+- 待人工验证：WebView、登录状态、OAuth、分屏、单实例、托盘、NSIS 安装、覆盖升级和卸载流程。
+- 待决定：人工验收通过后再决定是否合并到 `main`；当前不得直接修改主分支。
 
 ## v1.2.6 发布
 
