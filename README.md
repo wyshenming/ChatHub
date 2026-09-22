@@ -88,6 +88,18 @@ ChatHub 会把网页登录状态保存在本机 Electron 用户数据目录中�
 
 Electron 已升级至 `43.2.0`、electron-builder 已升级至 `26.15.3`。当前 `npm audit --omit=dev` 报告 0 个运行时已知漏洞；全量 `npm audit` 仍报告 5 个仅影响开发 / 构建工具链的高危依赖告警，已记录为后续独立维护项。自动化构建与启动烟测已通过；网页登录、OAuth、覆盖安装和卸载仍建议在真实使用中持续验证。
 
+这 5 项是依赖包分组，不等同于只有 5 条漏洞公告；均为间接开发依赖，当前不随日常运行的 ChatHub 功能路径使用：
+
+| 依赖包 | 简单影响 | 使用场景 |
+| --- | --- | --- |
+| `@xmldom/xmldom` | 恶意 XML 可能导致解析异常、资源消耗或生成错误内容。 | 打包工具处理 XML。 |
+| `brace-expansion` | 特制通配符可能耗尽内存，造成构建卡死。 | 打包时处理文件匹配规则。 |
+| `fast-uri` | 特制 URL 可能被错误解析，理论上可能请求错误地址。 | 打包配置校验。 |
+| `js-yaml` | 特制 YAML 可能造成 CPU 长时间占用。 | 打包工具读取配置。 |
+| `undici` | 特制网络响应可能使构建下载或原生模块重建异常。 | Electron 下载与原生模块构建。 |
+
+因此，直接运行 `ChatHub.exe`、登录网站和日常网页使用不经过这些路径；仍应避免在不可信项目目录或网络环境中执行 `npm install`、`npm run dist` 等构建命令。
+
 项目继续启用上下文隔离并关闭网页的 Node.js 权限；使用时仍应避免添加来源不明的自定义网页。详细基线与验证记录见 [`DEPENDENCY_SECURITY.md`](DEPENDENCY_SECURITY.md)。
 
 ## English
@@ -176,6 +188,18 @@ ChatHub stores website login state locally in the Electron user data directory. 
 
 The 2026-07-21 audit baseline reported eight affected dependency packages: seven high-severity and one critical.
 
-On 2026-07-24, a dedicated upgrade branch updated Electron to `43.2.0` and electron-builder to `26.15.3`. Both `npm audit` and `npm audit --omit=dev` now report zero known vulnerabilities. Automated packaging and startup smoke tests pass; website login, OAuth, upgrade installation, and uninstallation still require manual acceptance before merge.
+Electron has been updated to `43.2.0` and electron-builder to `26.15.3`. `npm audit --omit=dev` currently reports zero known runtime vulnerabilities. The full `npm audit` still reports five high-severity dependency groups used only by development and build tooling; they are recorded for a separate maintenance update. Automated packaging and startup smoke tests pass; website login, OAuth, upgrade installation, and uninstallation should still be validated in normal use.
+
+The five findings are dependency groups, not only five individual advisories. They are indirect development dependencies and are not part of the normal ChatHub runtime path:
+
+| Dependency | Plain-language impact | Build-only use |
+| --- | --- | --- |
+| `@xmldom/xmldom` | Malicious XML could cause parsing errors, resource use, or incorrect generated content. | XML handling in packaging tools. |
+| `brace-expansion` | Crafted wildcard patterns could exhaust memory and stall a build. | File-pattern matching during packaging. |
+| `fast-uri` | Crafted URLs could be parsed incorrectly and theoretically target the wrong address. | Packaging configuration validation. |
+| `js-yaml` | Crafted YAML could keep the CPU busy for a long time. | Packaging-tool configuration parsing. |
+| `undici` | Crafted network responses could disrupt build downloads or native-module rebuilds. | Electron downloads and native-module builds. |
+
+Running `ChatHub.exe`, signing in to websites, and ordinary web use do not traverse these paths. Still, avoid running `npm install` or `npm run dist` in untrusted project directories or network environments.
 
 Context isolation remains enabled and Node.js integration remains disabled for web content. Users should still avoid adding untrusted custom websites. See [`DEPENDENCY_SECURITY.md`](DEPENDENCY_SECURITY.md) for the detailed baseline and validation record.

@@ -7,6 +7,7 @@
 - `npm audit --omit=dev` 为 0；全量 `npm audit` 新报告 5 个仅影响开发 / 构建工具链的高危依赖告警，本次不做未经验证的依赖升级。
 - `dist/ChatHub.exe` 的 FileVersion / ProductVersion 均为 `1.5.0`，`--quit-for-uninstall` 烟测退出码为 0。
 - `dist/ChatHub-Setup-x64.exe` 大小为 101,455,717 字节，SHA256：`884F82DEDA88A1AA58DC261C271A5B48A2500BD34D0E638A170E5E3DFD69E0A4`。
+- README 已补充全量审计中 5 个开发 / 构建依赖组的用途、简单影响与运行时边界，并提供中英文说明。
 
 ## 2026-09-22 - 深色模式与网页系统主题同步
 
