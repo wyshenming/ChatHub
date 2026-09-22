@@ -18,5 +18,5 @@ contextBridge.exposeInMainWorld("aiChatHub", {
     ipcRenderer.on("webview-open-tab", listener);
     return () => ipcRenderer.removeListener("webview-open-tab", listener);
   },
-  version: "1.2.7"
+  version: "1.5.0"
 });

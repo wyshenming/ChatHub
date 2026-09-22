@@ -6,7 +6,7 @@ ChatHub 是一个面向 Windows 的 AI 网页工作台。它基于 Electron + We
 
 ### 维护状态
 
-ChatHub 已发布正式版 `v1.2.7`，并进入稳定维护期。本项目作为自用小工具，后续不再规划功能性扩展，主要维护方向是 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
+ChatHub 已发布正式版 `v1.5.0`，并进入稳定维护期。本项目作为自用小工具，后续主要维护 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
 ### 功能特性
 
@@ -21,6 +21,7 @@ ChatHub 已发布正式版 `v1.2.7`，并进入稳定维护期。本项目作为
 - 顶部提供当前网页的快捷刷新按钮；自定义网页还会显示快捷删除按钮。
 - 顶部提供当前页面缩放控件，缩放比例按任务保存。
 - 设置中提供关于窗口，展示版本、作者和 GitHub 仓库信息。
+- 设置支持跟随系统、浅色和深色主题；支持系统主题的网页会同步切换。
 - 可执行文件元数据写入作者信息：染泓如梦QAQ。
 - 支持单实例运行：重复打开 exe 时会激活已有窗口，不会创建第二个应用窗口。
 - 面向 Windows x64 打包。
@@ -85,7 +86,7 @@ ChatHub 会把网页登录状态保存在本机 Electron 用户数据目录中�
 
 2026-07-21 的审计基线曾报告 8 个受影响依赖包：7 个高危、1 个严重。
 
-2026-07-24，独立升级分支已将 Electron 升级至 `43.2.0`、electron-builder 升级至 `26.15.3`，当前 `npm audit` 和 `npm audit --omit=dev` 均报告 0 个已知漏洞。自动化构建与启动烟测已通过，网页登录、OAuth、覆盖安装和卸载仍需人工验收后再决定是否合并。
+Electron 已升级至 `43.2.0`、electron-builder 已升级至 `26.15.3`。当前 `npm audit --omit=dev` 报告 0 个运行时已知漏洞；全量 `npm audit` 仍报告 5 个仅影响开发 / 构建工具链的高危依赖告警，已记录为后续独立维护项。自动化构建与启动烟测已通过；网页登录、OAuth、覆盖安装和卸载仍建议在真实使用中持续验证。
 
 项目继续启用上下文隔离并关闭网页的 Node.js 权限；使用时仍应避免添加来源不明的自定义网页。详细基线与验证记录见 [`DEPENDENCY_SECURITY.md`](DEPENDENCY_SECURITY.md)。
 
@@ -95,7 +96,7 @@ ChatHub is a Windows desktop workspace for AI chat websites. It uses Electron + 
 
 ### Maintenance Status
 
-ChatHub has released stable version `v1.2.7` and is now in stable maintenance mode. As a personal utility, it no longer plans feature expansion; future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
+ChatHub has released stable version `v1.5.0` and is now in stable maintenance mode. As a personal utility, future work focuses on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements.
 
 ### Features
 
@@ -110,6 +111,7 @@ ChatHub has released stable version `v1.2.7` and is now in stable maintenance mo
 - Quick refresh button in the top bar; custom pages also show a quick delete button.
 - Current page zoom controls in the top bar, with zoom saved per task.
 - About dialog in settings with version, author, and GitHub repository information.
+- Appearance settings for system, light, and dark themes; websites that support system themes update with the selected preference.
 - Executable metadata includes the author: 染泓如梦QAQ.
 - Single-instance behavior: opening the exe again activates the existing window instead of creating a second app window.
 - Windows x64 build target.

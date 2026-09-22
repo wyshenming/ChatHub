@@ -2,7 +2,7 @@
 
 ## 中文
 
-当前版本：v1.2.7
+当前版本：v1.5.0
 
 维护状态：ChatHub 已发布第一个正式版。本项目作为自用小工具进入稳定维护期，后续不再规划功能性扩展，主要只做 bug 修复、网页兼容性、安装 / 卸载和性能细节优化。
 
@@ -11,6 +11,13 @@
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.5.0 维护版
+
+- 新增跟随系统、浅色和深色主题；支持系统主题的网页会同步获得对应的 `prefers-color-scheme` 偏好。
+- 新增每 30 秒一次的 WebView / GPU 资源快照日志，用于诊断网页长期使用后可能出现的输入卡顿。
+- Electron 升级至 `43.2.0`，electron-builder 升级至 `26.15.3`；`npm audit --omit=dev` 为 0 个运行时已知漏洞。全量 `npm audit` 的 5 个开发 / 构建工具链高危告警留待后续独立维护。
+- 不清理或迁移登录状态、任务数据、Cookie 或网站持久化数据。
 
 ### v1.2.7 维护版
 
@@ -118,7 +125,7 @@ ChatHub-Setup-x64.exe
 
 ## English
 
-Current version: v1.2.7
+Current version: v1.5.0
 
 Maintenance status: ChatHub has reached its first stable release. As a personal utility, it is now in stable maintenance mode. Future work will focus on bug fixes, website compatibility, installer / uninstaller behavior, and small performance refinements rather than feature expansion.
 
@@ -127,6 +134,13 @@ Current installer:
 ```text
 ChatHub-Setup-x64.exe
 ```
+
+### v1.5.0 Maintenance Release
+
+- Added system, light, and dark appearance settings. Websites that support system themes receive the selected `prefers-color-scheme` preference.
+- Added 30-second WebView and GPU resource snapshots to help diagnose input lag after long-running page use.
+- Upgraded Electron to `43.2.0` and electron-builder to `26.15.3`; `npm audit --omit=dev` reports zero known runtime vulnerabilities. Five high-severity findings in development and build tooling from the full `npm audit` are deferred to a separate maintenance update.
+- Does not clear or migrate login sessions, task data, cookies, or website persistent storage.
 
 ### v1.2.7 Maintenance Release
 
