@@ -32,6 +32,14 @@ export class StorageManager {
     return this.systemApi.setCloseSettings(settings);
   }
 
+  async setAppearance(themeSource) {
+    return this.systemApi.setAppearance(themeSource);
+  }
+
+  onAppearanceUpdated(callback) {
+    return this.systemApi.onAppearanceUpdated(callback);
+  }
+
   getPerformanceSettings() {
     const stored = this.readJson("chathub.performanceSettings.v1") || {};
     return {
@@ -52,6 +60,7 @@ export class StorageManager {
     return {
       sidebarCollapsed: Boolean(stored.sidebarCollapsed),
       startupTaskId: typeof stored.startupTaskId === "string" ? stored.startupTaskId : "",
+      themeSource: this.normalizeThemeSource(stored.themeSource),
     };
   }
 
@@ -62,6 +71,7 @@ export class StorageManager {
         typeof settings?.sidebarCollapsed === "boolean" ? settings.sidebarCollapsed : current.sidebarCollapsed,
       startupTaskId:
         typeof settings?.startupTaskId === "string" ? settings.startupTaskId : current.startupTaskId,
+      themeSource: this.normalizeThemeSource(settings?.themeSource ?? current.themeSource),
     };
     this.writeJson("chathub.uiSettings.v1", nextSettings);
     return nextSettings;
@@ -70,6 +80,10 @@ export class StorageManager {
   normalizeMaxWebViewPoolSize(value) {
     const parsed = Number(value);
     return [2, 3, 4, 5, 6].includes(parsed) ? parsed : 4;
+  }
+
+  normalizeThemeSource(value) {
+    return ["system", "light", "dark"].includes(value) ? value : "system";
   }
 
   async clearServiceData(targets) {

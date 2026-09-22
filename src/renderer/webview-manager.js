@@ -2,6 +2,7 @@ import { DEFAULT_ZOOM_PERCENT, RUNTIME_PARTITION } from "./constants.js";
 
 const NAVIGATION_TIMEOUT_MS = 30000;
 const MAX_RECOVERY_ATTEMPTS = 1;
+const RESOURCE_SNAPSHOT_INTERVAL_MS = 30000;
 
 export class WebViewManager {
   constructor(frame, callbacks) {
@@ -15,8 +16,13 @@ export class WebViewManager {
     this.webview = null;
     this.webviewPool = new Map();
     this.maxWebViewPoolSize = 4;
+    this.resourceSnapshotInFlight = false;
+    this.resourceSnapshotIntervalId = window.setInterval(() => {
+      this.logResourceSnapshot();
+    }, RESOURCE_SNAPSHOT_INTERVAL_MS);
 
     window.addEventListener("beforeunload", () => {
+      window.clearInterval(this.resourceSnapshotIntervalId);
       this.logPoolDestroy("beforeunload");
     });
   }
@@ -984,6 +990,66 @@ export class WebViewManager {
     });
   }
 
+  async logResourceSnapshot() {
+    if (
+      this.resourceSnapshotInFlight ||
+      this.webviewPool.size === 0 ||
+      !window.aiChatHub?.getWebViewProcessMetrics
+    ) {
+      return;
+    }
+
+    this.resourceSnapshotInFlight = true;
+    try {
+      const snapshot = await window.aiChatHub.getWebViewProcessMetrics();
+      const metricsByWebContentsId = new Map(
+        (snapshot?.webviews || []).map((item) => [item.webContentsId, item])
+      );
+      const records = [...this.webviewPool.values()].map((record) => {
+        let webContentsId = null;
+        try {
+          webContentsId = record.webview.getWebContentsId();
+        } catch {
+          // The WebView can be destroyed between collecting the snapshot and formatting it.
+        }
+
+        const process = metricsByWebContentsId.get(webContentsId);
+        const metric = process?.metric;
+        const visibleSide =
+          record.taskId === this.currentTaskId
+            ? "primary"
+            : record.taskId === this.comparisonTaskId
+              ? "comparison"
+              : "hidden";
+
+        return [
+          `Task: ${record.taskTitle || record.taskId}`,
+          `URL: ${this.safeLogUrl(this.safeGetUrl(record) || record.targetUrl)}`,
+          `Visible: ${visibleSide}`,
+          `WebContents ID: ${webContentsId ?? "unavailable"}`,
+          `OS Process ID: ${process?.osProcessId ?? "unavailable"}`,
+          `CPU: ${this.formatCpuPercent(metric?.cpuPercent)}`,
+          `Working Set: ${this.formatKilobytes(metric?.workingSetSize)}`,
+          `Private Memory: ${this.formatKilobytes(metric?.privateBytes)}`,
+        ].join("\n");
+      });
+      const gpu = (snapshot?.gpu || [])
+        .map(
+          (metric) =>
+            `PID ${metric.pid}: CPU ${this.formatCpuPercent(metric.cpuPercent)}, Working Set ${this.formatKilobytes(metric.workingSetSize)}, Private Memory ${this.formatKilobytes(metric.privateBytes)}`
+        )
+        .join("; ");
+
+      this.logPerformance(
+        `[WebViewResource]\nTime: ${new Date().toISOString()}\nWebView Count: ${this.webViewCount()}\nPool Size: ${this.webviewPool.size}\nGPU: ${gpu || "unavailable"}\n${records.join("\n\n")}`
+      );
+    } catch {
+      // Resource sampling is diagnostic only; it must not affect page behavior.
+    } finally {
+      this.resourceSnapshotInFlight = false;
+    }
+  }
+
   webViewCount() {
     return document.querySelectorAll("webview").length;
   }
@@ -1093,6 +1159,18 @@ export class WebViewManager {
 
   bytesToMb(value) {
     return Math.round((value / 1024 / 1024) * 10) / 10;
+  }
+
+  formatKilobytes(value) {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) && numericValue > 0
+      ? `${this.bytesToMb(numericValue * 1024)} MB`
+      : "unavailable";
+  }
+
+  formatCpuPercent(value) {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? `${numericValue.toFixed(1)}%` : "unavailable";
   }
 
   formatCost(value) {

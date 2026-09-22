@@ -51,6 +51,7 @@ const openAboutButton = document.querySelector("#open-about");
 const closeBehaviorInputs = [...document.querySelectorAll("input[name='close-behavior']")];
 const startupTaskSelect = document.querySelector("#startup-task");
 const maxWebViewPoolSizeSelect = document.querySelector("#max-webview-pool-size");
+const themeSourceSelect = document.querySelector("#theme-source");
 const aboutModal = document.querySelector("#about-modal");
 const closeAboutButton = document.querySelector("#close-about");
 const openRepositoryButton = document.querySelector("#open-repository");
@@ -755,6 +756,14 @@ const view = {
     maxWebViewPoolSizeSelect.value = String(value);
   },
 
+  setThemeSource(value) {
+    themeSourceSelect.value = value;
+  },
+
+  setAppearance({ shouldUseDarkColors }) {
+    document.documentElement.dataset.theme = shouldUseDarkColors ? "dark" : "light";
+  },
+
   setFormError(message) {
     formError.textContent = message;
   },
@@ -921,6 +930,10 @@ closeBehaviorInputs.forEach((input) => {
 
 maxWebViewPoolSizeSelect.addEventListener("change", () => {
   controller.setMaxWebViewPoolSize(maxWebViewPoolSizeSelect.value);
+});
+
+themeSourceSelect.addEventListener("change", () => {
+  controller.setThemeSource(themeSourceSelect.value);
 });
 
 startupTaskSelect.addEventListener("change", () => {

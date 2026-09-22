@@ -1,5 +1,44 @@
 ﻿# DEVLOG
 
+## 2026-09-22 - 深色模式与网页系统主题同步
+
+- 设置新增主题选择：跟随系统、浅色、深色，持久化在既有 `chathub.uiSettings.v1`。
+- 主进程通过 Electron `nativeTheme.themeSource` 应用选择；WebView 因此会向支持 `prefers-color-scheme` 的网页提供对应系统主题。
+- 系统主题变化时，跟随系统模式会自动同步 ChatHub 界面与已打开 WebView；不刷新 WebView、不清理登录状态。
+
+## 2026-09-04 WebView 资源诊断日志
+
+### 本轮已经完成
+
+- 为大型网页长期使用后输入卡顿补充 WebView 进程资源快照。
+- 每 30 秒向既有 `webview.log` 记录保留 WebView 的任务、脱敏 URL、可见状态、renderer CPU、工作集内存和私有内存。
+- 同时记录 GPU 进程资源概况，用于区分网页 renderer 与 GPU 资源增长。
+- 复用既有 10 MB 日志滚动和 URL 敏感参数脱敏机制；采样重入会跳过，避免诊断本身堆积。
+
+### 待人工验证
+
+- 持续使用出现输入卡顿的单页后，提供 `%APPDATA%\\AI Chat Hub\\logs\\webview.log` 供后续分析。
+
+## 2026-07-24 依赖安全独立分支升级
+
+### 本轮已经完成
+
+- 严格在 `codex/dependency-security-upgrade` 分支操作，未修改 `main`。
+- 将 Electron 从 `31.7.7` 升级到 `43.2.0`，electron-builder 从 `24.13.3` 升级到 `26.15.3`。
+- 传递依赖中的 `tar`、`js-yaml` 和 `brace-expansion` 已进入修复版本。
+- `npm audit` 与 `npm audit --omit=dev` 均从原基线告警降为 0。
+- 12 个 JavaScript / MJS 文件通过 `node --check`。
+- `npm run dist:dir` 与 `npm run dist` 完整构建通过。
+- 两个应用 EXE 均为版本 `1.2.7`、x64 `0x8664`，ASAR 关键入口完整。
+- 主窗口启动响应正常，`--quit-for-uninstall` 退出码为 0，退出后无残留进程。
+- 测试安装包大小 101,453,805 字节，SHA256：`41BEFE09E828C3235374EBDD1638677FFC6DA5E05F118E566D837D1EC0F4B3DD`。
+
+### 待人工验证
+
+- 内置与自定义网页加载、Cookie / 登录状态、OAuth、弹窗和白屏恢复。
+- 任务切换、网页标签、分屏拖动、单实例、托盘、关闭和清理登录状态。
+- NSIS 安装、从稳定版覆盖升级及卸载。
+
 ## 2026-07-21 v1.2.7 发布
 
 ### 本轮已经完成

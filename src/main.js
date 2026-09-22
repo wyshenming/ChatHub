@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, Tray, dialog, ipcMain, session, shell } = require("electron");
+const { app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeTheme, session, shell, webContents } = require("electron");
 const fs = require("fs");
 const path = require("path");
 
@@ -15,6 +15,8 @@ const defaultCloseSettings = {
   rememberChoice: true
 };
 
+const appearanceSources = new Set(["system", "light", "dark"]);
+
 const maxLogFileSize = 10 * 1024 * 1024;
 const retainedLogSize = 5 * 1024 * 1024;
 const logSessionId = createLogSessionId();
@@ -28,6 +30,19 @@ let tray = null;
 let isQuitting = false;
 let isClosePromptOpen = false;
 let didCleanPageCacheBeforeQuit = false;
+
+function appearanceState() {
+  return {
+    themeSource: nativeTheme.themeSource,
+    shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
+  };
+}
+
+function updateWindowBackground() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setBackgroundColor(nativeTheme.shouldUseDarkColors ? "#161b22" : "#f5f7fb");
+  }
+}
 
 function quitForUninstall() {
   isQuitting = true;
@@ -172,6 +187,48 @@ ipcMain.handle("append-webview-performance-log", async (_event, entry) => {
   }
 });
 
+ipcMain.handle("get-webview-process-metrics", () => {
+  const appMetrics = app.getAppMetrics();
+  const metricsByPid = new Map(appMetrics.map((metric) => [metric.pid, metric]));
+  const serializeMetric = (metric) => {
+    if (!metric) {
+      return null;
+    }
+
+    return {
+      type: metric.type || "unknown",
+      pid: metric.pid,
+      cpuPercent: Number(metric.cpu?.percentCPUUsage || 0),
+      workingSetSize: Number(metric.memory?.workingSetSize || 0),
+      privateBytes: Number(metric.memory?.privateBytes || 0),
+    };
+  };
+
+  const webviews = webContents
+    .getAllWebContents()
+    .filter((contents) => !contents.isDestroyed() && contents.getType() === "webview")
+    .map((contents) => {
+      try {
+        const osProcessId = contents.getOSProcessId();
+        return {
+          webContentsId: contents.id,
+          osProcessId,
+          metric: serializeMetric(metricsByPid.get(osProcessId)),
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  const gpu = appMetrics
+    .filter((metric) => metric.type === "GPU")
+    .map(serializeMetric)
+    .filter(Boolean);
+
+  return { webviews, gpu };
+});
+
 ipcMain.handle("clear-service-data", async (_event, targets) => {
   const normalizedTargets = (Array.isArray(targets) ? targets : [])
     .map((target) => (typeof target === "string" ? { partition: target } : target))
@@ -220,6 +277,19 @@ ipcMain.handle("get-close-settings", () => closeSettings);
 ipcMain.handle("set-close-settings", (_event, settings) => {
   closeSettings = writeCloseSettings(settings || {});
   return closeSettings;
+});
+
+ipcMain.handle("set-appearance", (_event, themeSource) => {
+  nativeTheme.themeSource = appearanceSources.has(themeSource) ? themeSource : "system";
+  updateWindowBackground();
+  return appearanceState();
+});
+
+nativeTheme.on("updated", () => {
+  updateWindowBackground();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("appearance-updated", appearanceState());
+  }
 });
 
 function showMainWindow() {
@@ -342,7 +412,7 @@ function createWindow() {
     minHeight: 640,
     title: "ChatHub",
     icon: path.join(__dirname, "..", "build", "icon.ico"),
-    backgroundColor: "#f5f7fb",
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#161b22" : "#f5f7fb",
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
