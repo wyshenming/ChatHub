@@ -3,7 +3,7 @@
 ## 2026-09-22 v1.5.0 发布
 
 - 将版本统一升级到 `1.5.0`，合并 Electron 依赖安全升级、WebView 资源诊断日志和深色模式功能。
-- 完整 NSIS 安装包已构建；待记录 SHA256、GitHub tag 与双语 Release。
+- 完整 NSIS 安装包已构建，并已创建全新 annotated tag `v1.5.0` 和双语 GitHub Release：`https://github.com/wyshenming/ChatHub/releases/tag/v1.5.0`。
 - `npm audit --omit=dev` 为 0；全量 `npm audit` 新报告 5 个仅影响开发 / 构建工具链的高危依赖告警，本次不做未经验证的依赖升级。
 - `dist/ChatHub.exe` 的 FileVersion / ProductVersion 均为 `1.5.0`，`--quit-for-uninstall` 烟测退出码为 0。
 - `dist/ChatHub-Setup-x64.exe` 大小为 101,455,717 字节，SHA256：`884F82DEDA88A1AA58DC261C271A5B48A2500BD34D0E638A170E5E3DFD69E0A4`。
