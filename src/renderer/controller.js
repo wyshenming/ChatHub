@@ -10,10 +10,14 @@ export class AppController {
     this.view = view;
     this.aboutInfo = aboutInfo;
     this.comparisonTaskId = null;
+    this.unsubscribeAppearance = this.storageManager.onAppearanceUpdated((appearance) => {
+      this.view.setAppearance(appearance);
+    });
   }
 
   start() {
     this.applyPerformanceSettings();
+    this.applyAppearanceSettings();
     const { startupTaskId } = this.storageManager.getUiSettings();
     const startupTask = this.taskManager.get(startupTaskId);
 
@@ -398,6 +402,7 @@ export class AppController {
     this.view.openSettingsModal();
     this.webViewManager.blur();
     this.loadPerformanceSettings();
+    this.loadAppearanceSettings();
     await this.loadCloseSettings();
   }
 
@@ -443,6 +448,32 @@ export class AppController {
   applyPerformanceSettings() {
     const settings = this.storageManager.getPerformanceSettings();
     this.webViewManager.setMaxWebViewPoolSize(settings.maxWebViewPoolSize);
+  }
+
+  loadAppearanceSettings() {
+    this.view.setThemeSource(this.storageManager.getUiSettings().themeSource);
+  }
+
+  async applyAppearanceSettings() {
+    const { themeSource } = this.storageManager.getUiSettings();
+    this.view.setThemeSource(themeSource);
+    try {
+      const appearance = await this.storageManager.setAppearance(themeSource);
+      this.view.setAppearance(appearance);
+    } catch {
+      this.view.setAppearance({ themeSource, shouldUseDarkColors: false });
+    }
+  }
+
+  async setThemeSource(themeSource) {
+    const settings = this.storageManager.setUiSettings({ themeSource });
+    this.view.setThemeSource(settings.themeSource);
+    try {
+      const appearance = await this.storageManager.setAppearance(settings.themeSource);
+      this.view.setAppearance(appearance);
+    } catch {
+      // Keep the selected local preference so it can be applied next time.
+    }
   }
 
   setMaxWebViewPoolSize(maxWebViewPoolSize) {
@@ -800,6 +831,7 @@ export class AppController {
   }
 
   beforeUnload() {
+    this.unsubscribeAppearance?.();
     this.persistCurrentTaskAsPaused();
   }
 }

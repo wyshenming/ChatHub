@@ -1,5 +1,24 @@
 ﻿# DEVLOG
 
+## 2026-09-22 - 深色模式与网页系统主题同步
+
+- 设置新增主题选择：跟随系统、浅色、深色，持久化在既有 `chathub.uiSettings.v1`。
+- 主进程通过 Electron `nativeTheme.themeSource` 应用选择；WebView 因此会向支持 `prefers-color-scheme` 的网页提供对应系统主题。
+- 系统主题变化时，跟随系统模式会自动同步 ChatHub 界面与已打开 WebView；不刷新 WebView、不清理登录状态。
+
+## 2026-09-04 WebView 资源诊断日志
+
+### 本轮已经完成
+
+- 为大型网页长期使用后输入卡顿补充 WebView 进程资源快照。
+- 每 30 秒向既有 `webview.log` 记录保留 WebView 的任务、脱敏 URL、可见状态、renderer CPU、工作集内存和私有内存。
+- 同时记录 GPU 进程资源概况，用于区分网页 renderer 与 GPU 资源增长。
+- 复用既有 10 MB 日志滚动和 URL 敏感参数脱敏机制；采样重入会跳过，避免诊断本身堆积。
+
+### 待人工验证
+
+- 持续使用出现输入卡顿的单页后，提供 `%APPDATA%\\AI Chat Hub\\logs\\webview.log` 供后续分析。
+
 ## 2026-07-24 依赖安全独立分支升级
 
 ### 本轮已经完成
